@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# Ralph Loop - Claude Code Edition
+# Ralph Loop - Codex CLI Edition
 #
 # Usage:
-#   ./scripts/ralph-loop.sh --all              # All specs/issues
-#   ./scripts/ralph-loop.sh --spec 001-name    # Single spec
-#   ./scripts/ralph-loop.sh --issue 42         # Single GitHub issue
-#   ./scripts/ralph-loop.sh "Custom prompt"    # Free-form
+#   ./scripts/ralph-loop-codex.sh --all              # All specs/issues
+#   ./scripts/ralph-loop-codex.sh --spec 001-name    # Single spec
+#   ./scripts/ralph-loop-codex.sh --issue 42         # Single GitHub issue
+#   ./scripts/ralph-loop-codex.sh "Custom prompt"    # Free-form
 #
 
 set -e
@@ -29,11 +29,13 @@ ISSUE_NUM=""
 PROMPT=""
 YOLO_MODE=false
 GIT_AUTONOMY=false
+CODEX_ARGS=""
 
 # Check constitution for settings
 if [[ -f "$CONSTITUTION" ]]; then
     if grep -q "YOLO Mode: ENABLED" "$CONSTITUTION" 2>/dev/null; then
         YOLO_MODE=true
+        CODEX_ARGS="--dangerously-bypass-approvals-and-sandbox"
     fi
     if grep -q "Git Autonomy: ENABLED" "$CONSTITUTION" 2>/dev/null; then
         GIT_AUTONOMY=true
@@ -59,13 +61,13 @@ while [[ $# -gt 0 ]]; do
             ;;
         --help|-h)
             cat <<EOF
-Ralph Loop - Claude Code Edition
+Ralph Loop - Codex CLI Edition
 
 Usage:
-  ./scripts/ralph-loop.sh --all              # All specs/issues
-  ./scripts/ralph-loop.sh --spec 001-name    # Single spec
-  ./scripts/ralph-loop.sh --issue 42         # Single GitHub issue  
-  ./scripts/ralph-loop.sh "Custom prompt"    # Free-form
+  ./scripts/ralph-loop-codex.sh --all              # All specs/issues
+  ./scripts/ralph-loop-codex.sh --spec 001-name    # Single spec
+  ./scripts/ralph-loop-codex.sh --issue 42         # Single GitHub issue  
+  ./scripts/ralph-loop-codex.sh "Custom prompt"    # Free-form
 
 Options:
   --all, -a          Process all work items
@@ -76,6 +78,8 @@ Options:
 Current Settings (from constitution):
   YOLO Mode:     $YOLO_MODE
   Git Autonomy:  $GIT_AUTONOMY
+
+When YOLO Mode is enabled, uses: --dangerously-bypass-approvals-and-sandbox
 
 EOF
             exit 0
@@ -93,6 +97,18 @@ EOF
 done
 
 cd "$PROJECT_DIR"
+
+# Check codex is installed
+if ! command -v codex &> /dev/null; then
+    echo -e "${RED}Error: Codex CLI not found${NC}"
+    echo ""
+    echo "Install Codex CLI:"
+    echo "  npm install -g @openai/codex"
+    echo ""
+    echo "Then login:"
+    echo "  codex --login"
+    exit 1
+fi
 
 # Build outer loop prompt (processes all items)
 build_all_prompt() {
@@ -273,29 +289,26 @@ case $MODE in
         echo -e "${RED}Error: Specify --all, --spec NAME, --issue NUM, or a prompt${NC}"
         echo ""
         echo "Usage:"
-        echo "  ./scripts/ralph-loop.sh --all"
-        echo "  ./scripts/ralph-loop.sh --spec 001-feature-name"
-        echo "  ./scripts/ralph-loop.sh --issue 42"
-        echo "  ./scripts/ralph-loop.sh \"Fix the login bug\""
+        echo "  ./scripts/ralph-loop-codex.sh --all"
+        echo "  ./scripts/ralph-loop-codex.sh --spec 001-feature-name"
+        echo "  ./scripts/ralph-loop-codex.sh --issue 42"
+        echo "  ./scripts/ralph-loop-codex.sh \"Fix the login bug\""
         exit 1
         ;;
 esac
 
 echo -e "${BLUE}YOLO Mode: $YOLO_MODE${NC}"
 echo -e "${BLUE}Git Autonomy: $GIT_AUTONOMY${NC}"
+if [[ "$YOLO_MODE" == "true" ]]; then
+    echo -e "${YELLOW}Using: --dangerously-bypass-approvals-and-sandbox${NC}"
+fi
 echo ""
 
-# Run with Claude
-if command -v claude &> /dev/null; then
-    claude "$FINAL_PROMPT"
+# Run with Codex
+if [[ -n "$CODEX_ARGS" ]]; then
+    codex $CODEX_ARGS "$FINAL_PROMPT"
 else
-    echo -e "${YELLOW}Claude CLI not found.${NC}"
-    echo ""
-    echo "Paste this prompt into Claude Code:"
-    echo ""
-    echo "---"
-    echo "$FINAL_PROMPT"
-    echo "---"
+    codex "$FINAL_PROMPT"
 fi
 
 echo ""

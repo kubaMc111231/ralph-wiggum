@@ -1,8 +1,8 @@
-# AI AGENT: Execute These Instructions
+# AI AGENT: Execute These Installation Instructions
 
 > **YOU ARE AN AI CODING AGENT.** Follow these instructions to set up Ralph Wiggum in the user's project.
 > 
-> **DO NOT just describe these steps.** Actually execute them using your file creation tools.
+> **DO NOT just describe these steps.** Actually execute them and interview the user.
 
 ---
 
@@ -17,14 +17,137 @@ mkdir -p templates
 mkdir -p scripts
 mkdir -p .cursor/commands
 mkdir -p .claude/commands
-mkdir -p codex-prompts
 ```
 
 ---
 
-## Phase 2: Create Constitution Template
+## Phase 2: Create Pointer Files
 
-Create the file `.specify/memory/constitution.md` with this content:
+### 2a. Create AGENTS.md
+
+Create `AGENTS.md` in the project root:
+
+```markdown
+# Agent Instructions
+
+**Read the constitution**: `.specify/memory/constitution.md`
+
+That file contains ALL instructions for working on this project, including:
+- Project principles and constraints
+- Ralph Wiggum workflow configuration
+- Autonomy settings (YOLO mode, git autonomy)
+- How to run the Ralph loop
+- Specification or issue tracking approach
+
+The constitution is the single source of truth. Read it on every chat session.
+```
+
+### 2b. Create CLAUDE.md
+
+Create `CLAUDE.md` in the project root:
+
+```markdown
+# Claude Instructions
+
+**Read the constitution**: `.specify/memory/constitution.md`
+
+That file contains ALL instructions for working on this project.
+```
+
+---
+
+## Phase 3: Interview the User
+
+**You MUST interview the user to gather information for the constitution.** 
+
+Present these questions one section at a time, waiting for responses:
+
+### Interview Section 1: Project Basics
+
+Ask the user:
+
+```
+## Let's set up Ralph Wiggum for your project!
+
+I'll ask you a few questions to create your project constitution.
+
+**1. Project Name**: What is your project called?
+
+**2. Project Description**: In 1-2 sentences, what does this project do?
+
+**3. Tech Stack**: What technologies are you using? (e.g., Next.js, Python/FastAPI, React, etc.)
+```
+
+Wait for response, then continue:
+
+### Interview Section 2: Autonomy Settings
+
+```
+## Autonomy Configuration
+
+Ralph Wiggum works best with full autonomy. I'll configure this for you.
+
+**4. YOLO Mode** (Strongly Recommended ✅)
+
+YOLO mode allows me to work without asking permission for every action.
+This is ESSENTIAL for the Ralph loop to work properly.
+
+⚠️ **Warning**: YOLO mode gives the AI full access to read, write, and execute.
+Only use in version-controlled projects where you can revert changes.
+
+Do you want to enable YOLO mode? (yes/no, default: yes)
+
+**5. Autonomous Git** (Strongly Recommended ✅)
+
+This allows me to commit and push changes without asking.
+Essential for continuous autonomous work.
+
+Do you want to enable autonomous commit and push? (yes/no, default: yes)
+```
+
+Wait for response, then continue:
+
+### Interview Section 3: Work Item Source
+
+```
+## Work Item Source
+
+How do you want to track what needs to be built?
+
+**6. Choose your approach**:
+
+| Option | Description |
+|--------|-------------|
+| A | **SpecKit Specs** — Create specs in `specs/` folder using `/speckit.specify` |
+| B | **GitHub Issues** — Use GitHub Issues as your backlog |
+| C | **Custom** — Use another issue tracker (Jira, Linear, etc.) |
+
+Which option? (A/B/C, default: A)
+```
+
+Wait for response, then continue:
+
+### Interview Section 4: Additional Settings
+
+```
+## Additional Settings
+
+**7. Design System** (optional): Do you have a design system or style guide file I should reference? If yes, provide the path.
+
+**8. Deployment**: How do you deploy? (e.g., Render, Vercel, manual, none yet)
+
+**9. The Magic Word**: When you're ready for me to start working through your backlog, just say:
+
+> "Ralph, start working"
+
+I'll then give you the command to run the Ralph loop in your terminal.
+```
+
+---
+
+## Phase 4: Create the Constitution
+
+After gathering all interview responses, create `.specify/memory/constitution.md`:
 
 ```markdown
 # [PROJECT_NAME] Constitution
@@ -34,587 +157,827 @@ Create the file `.specify/memory/constitution.md` with this content:
 ## Version
 1.0.0
 
+---
+
+## 🔍 Context Detection
+
+**AI Agent: Read this section first to understand your context.**
+
+You are reading this constitution in one of two contexts:
+
+### Context A: Ralph Loop (Implementation Mode)
+You are in a Ralph loop if:
+- You were started by `ralph-loop.sh` or `ralph-loop-codex.sh`
+- Your prompt mentions "implement spec" or "work through all specs/issues"
+- You see `<promise>` completion signals in your instructions
+
+**In this context**: Focus on implementation. Follow the spec. Complete the acceptance criteria. Output `<promise>DONE</promise>` when finished.
+
+### Context B: Interactive Chat (Discussion Mode)
+You are in interactive chat if:
+- The user is asking questions, discussing ideas, or seeking guidance
+- You're helping set up the project or create specs
+- No Ralph loop was started
+
+**In this context**: Be helpful and conversational. Guide the user. Create specs with `/speckit.specify`. Explain how to start the Ralph loop when ready.
+
+---
+
 ## Core Principles
 
-### I. [PRINCIPLE_1_NAME]
-<!-- Example: API-First Architecture, Component-Based Design, etc. -->
-[Describe your first core principle]
+### I. Simplicity (YAGNI)
+Build exactly what's needed, nothing more. No premature abstractions.
 
-### II. [PRINCIPLE_2_NAME]
-[Describe your second core principle]
+### II. Quality First
+Test everything. Verify visually. Only mark done when truly complete.
 
-### III. Simplicity & YAGNI
-Start simple. Avoid over-engineering. Build exactly what's needed, nothing more.
-No premature abstractions. No "just in case" features.
+### III. Spec-Driven Development
+Every feature starts as a specification with clear acceptance criteria.
 
-### IV. Autonomous Agent Development (YOLO Mode)
-AI coding agents MUST work as autonomously as possible:
+### IV. Iteration
+If something fails, fix it and retry. Keep iterating until done.
 
-- Make decisions without asking for approval on implementation details
-- **Commit and push autonomously** - don't wait for user to commit
-- Deploy without user intervention
-- Monitor deployments and fix issues independently
-- Only ask the user when genuinely stuck
+---
 
-This is enabled by extensive testing:
-- Unit tests, integration tests, browser automation
-- Smoke tests after each deploy
-- Production testing
+## Autonomy Configuration
 
-### V. Quality Standards
-<!-- Customize: Add your quality requirements -->
-[Describe your quality expectations - design system, code standards, etc.]
+### YOLO Mode: [ENABLED/DISABLED]
+[If enabled]: You have FULL permission to read, write, and execute without asking.
+[If disabled]: Ask before making significant changes.
+
+### Git Autonomy: [ENABLED/DISABLED]
+[If enabled]: Commit and push without asking. Use meaningful commit messages.
+[If disabled]: Ask before committing or pushing.
+
+---
 
 ## Technical Stack
 
-| Layer | Technology | Notes |
-|-------|------------|-------|
-| Framework | [YOUR_FRAMEWORK] | e.g., Next.js, FastAPI, etc. |
-| Language | [YOUR_LANGUAGE] | e.g., TypeScript, Python |
-| Styling | [YOUR_STYLING] | e.g., Tailwind CSS |
-| Testing | [YOUR_TESTING] | e.g., Vitest + Playwright |
-| Deployment | [YOUR_DEPLOYMENT] | e.g., Render, Vercel |
+| Layer | Technology |
+|-------|------------|
+| [LAYER] | [TECHNOLOGY] |
 
-## API Integration (if applicable)
+[If design system path provided]:
+### Design System
+Read and follow: `[DESIGN_SYSTEM_PATH]`
 
-<!-- Customize: Add your API endpoints -->
-- Main API: [YOUR_API_URL]
-- Documentation: [YOUR_API_DOCS]
+---
 
-## Development Workflow
+## Work Item Source: [SPECKIT/GITHUB_ISSUES/CUSTOM]
 
-This project follows the **Ralph Wiggum + SpecKit** methodology:
+[If SpecKit]:
+### Using SpecKit Specifications
+- Specs live in: `specs/NNN-feature-name/spec.md`
+- Create specs with: `/speckit.specify [feature description]`
+- Each spec has a Completion Signal section with acceptance criteria
 
-1. **Constitution** -> Define principles (this file)
-2. **Spec** -> Create feature specifications with Completion Signals - `/speckit.specify`
-3. **Implement** -> Execute via Ralph Wiggum iterative loops - `/speckit.implement`
+[If GitHub Issues]:
+### Using GitHub Issues
+- Work items are GitHub Issues in this repository
+- Each issue should have clear acceptance criteria
+- Close issues when complete
 
-### Completion Signal
+[If Custom]:
+### Using [CUSTOM_SYSTEM]
+[Description of how to access work items]
 
-Every spec includes a Completion Signal section with:
-- Implementation checklist
-- Testing requirements
-- Completion promise: `<promise>DONE</promise>`
+---
 
-Agents iterate until all checks pass.
+## Ralph Loop Scripts
 
-## Governance
+Both scripts are in the `scripts/` folder:
 
-- **Amendments**: Update this file, increment version, note changes
-- **Compliance**: Follow principles in spirit, not just letter
-- **Exceptions**: Document and justify in specs when deviating
+### For Claude Code
+```bash
+./scripts/ralph-loop.sh
+```
+
+### For OpenAI Codex CLI
+```bash
+./scripts/ralph-loop-codex.sh
+```
+
+### Running the Loop
+
+**Work through all items:**
+```bash
+./scripts/ralph-loop.sh --all
+./scripts/ralph-loop-codex.sh --all
+```
+
+**Run a single item:**
+```bash
+./scripts/ralph-loop.sh --spec 001-feature-name
+./scripts/ralph-loop-codex.sh --issue 42
+```
+
+**Custom prompt:**
+```bash
+./scripts/ralph-loop.sh "Fix all bugs in the auth module"
+```
+
+---
+
+## Deployment
+
+[DEPLOYMENT_INFO]
+
+---
+
+## The Magic Word
+
+When the user says **"Ralph, start working"**, tell them:
+
+> Ready to start the Ralph loop! Run this in your terminal:
+> 
+> **For Claude Code:**
+> ```bash
+> ./scripts/ralph-loop.sh --all
+> ```
+> 
+> **For Codex CLI:**
+> ```bash
+> ./scripts/ralph-loop-codex.sh --all
+> ```
+
+---
+
+## Completion Signals
+
+Every work item (spec or issue) must have acceptance criteria.
+
+When working on an item:
+1. Implement the requirements
+2. Verify ALL acceptance criteria pass
+3. Run tests, check visually, verify no errors
+4. Output `<promise>DONE</promise>` for that item
+5. The outer loop will proceed to the next item
+
+When ALL items are complete:
+- Output `<promise>ALL_DONE</promise>`
+
+---
 
 **Version**: 1.0.0 | **Created**: [DATE]
 ```
 
----
-
-## Phase 3: Create Spec Template
-
-Create the file `templates/spec-template.md` with this content:
-
-```markdown
-# Specification: [FEATURE_NAME]
-
-## Feature: [Feature Title]
-
-### Overview
-[Brief description of the feature]
-
-### User Stories
-- As a [user type], I want to [action] so that [benefit]
-
-### Acceptance Criteria
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
-- [ ] [Criterion 3]
-
-### Functional Requirements
-
-#### FR-1: [Requirement Name]
-[Description]
-
-#### FR-2: [Requirement Name]
-[Description]
-
-### Dependencies
-- [Dependency 1]
-- [Dependency 2]
-
-### Assumptions
-- [Assumption 1]
-- [Assumption 2]
+**Important**: Replace ALL placeholders with actual values from the interview!
 
 ---
 
-## Completion Signal
+## Phase 5: Create the Ralph Loop Scripts
 
-### Implementation Checklist
-- [ ] [Deliverable 1]
-- [ ] [Deliverable 2]
-- [ ] [Deliverable 3]
-
-### Testing Requirements
-
-The agent MUST complete ALL before marking done:
-
-#### Unit & Integration Tests
-- [ ] All existing unit tests pass
-- [ ] All existing E2E tests pass
-- [ ] New tests added for new functionality
-
-#### Browser Verification
-- [ ] Navigate to relevant pages
-- [ ] Take screenshots
-- [ ] Verify visual appearance
-- [ ] Test interactive elements
-- [ ] Check console for errors
-
-#### Visual Verification
-- [ ] Desktop view looks correct
-- [ ] Tablet view looks correct
-- [ ] Mobile view looks correct
-
-#### Console/Network Check
-- [ ] No JavaScript console errors
-- [ ] No failed network requests
-- [ ] No 4xx or 5xx errors
-
-### Iteration Instructions
-
-If ANY check fails:
-1. Identify the specific issue
-2. Fix the code
-3. Commit and push
-4. Re-test
-5. Iterate until everything passes
-
-**Output when ALL checks pass**: `<promise>DONE</promise>`
-```
-
----
-
-## Phase 4: Create Checklist Template
-
-Create the file `templates/checklist-template.md` with this content:
-
-```markdown
-# Specification Quality Checklist: [FEATURE_NAME]
-
-**Purpose**: Validate specification completeness and quality before implementation
-**Created**: [DATE]
-**Feature**: [Link to spec.md]
-
-## Content Quality
-
-- [ ] No implementation details (languages, frameworks, APIs)
-- [ ] Focused on user value and business needs
-- [ ] Written for non-technical stakeholders
-- [ ] All mandatory sections completed
-
-## Requirement Completeness
-
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [ ] Requirements are testable and unambiguous
-- [ ] Success criteria are measurable
-- [ ] Success criteria are technology-agnostic
-- [ ] Acceptance criteria are defined
-- [ ] Edge cases are identified
-- [ ] Scope is clearly bounded
-- [ ] Dependencies and assumptions identified
-
-## Feature Readiness
-
-- [ ] All functional requirements have clear acceptance criteria
-- [ ] User scenarios cover primary flows
-- [ ] Feature meets measurable outcomes defined in Success Criteria
-- [ ] No implementation details leak into specification
-
-## Notes
-
-- Items marked incomplete require spec updates before implementation
-```
-
----
-
-## Phase 5: Create Cursor Slash Commands
-
-### 5a. Create `/speckit.specify` command
-
-Create `.cursor/commands/speckit.specify.md`:
-
-```markdown
----
-description: Create or update a feature specification from a natural language description.
----
-
-## User Input
-
-\`\`\`text
-$ARGUMENTS
-\`\`\`
-
-You **MUST** consider the user input before proceeding (if not empty).
-
-## Outline
-
-The text after `/speckit.specify` is the feature description. Do not ask the user to repeat it unless it is empty.
-
-Given that description, do this:
-
-1. **Generate a concise short name** (2-4 words) for the spec folder:
-   - Extract the most meaningful keywords
-   - Use action-noun format when possible (e.g., "user-auth", "billing-dashboard")
-   - Preserve technical terms and acronyms (OAuth2, JWT, API)
-
-2. **Determine the next spec number** (NO BRANCH CREATION):
-
-   a. List existing spec directories:
-      \`\`\`bash
-      ls -d specs/[0-9]*/ 2>/dev/null | sort -t/ -k2 -n
-      \`\`\`
-
-   b. Find the highest number N and use N+1 (zero-padded to 3 digits)
-
-   c. Create the spec directory structure:
-      \`\`\`bash
-      mkdir -p specs/NNN-short-name/checklists
-      \`\`\`
-
-   d. Set SPEC_FILE = `specs/NNN-short-name/spec.md`
-
-3. Load `templates/spec-template.md` to understand required sections.
-
-4. Write the spec using the template structure, replacing placeholders with concrete details derived from the feature description while preserving section order and headings.
-
-5. **Completion Signal**: Ensure the spec includes a `## Completion Signal` section with:
-   - Implementation checklist
-   - Testing requirements
-   - Iteration instructions
-   - Completion promise (`<promise>DONE</promise>`)
-
-6. **Create a quality checklist** at `specs/NNN-short-name/checklists/requirements.md` using `templates/checklist-template.md`.
-
-7. If anything is ambiguous, add up to 3 `[NEEDS CLARIFICATION: ...]` markers in the spec. For each marker, present a clear question and suggested answers.
-
-## Output
-
-Return: SUCCESS (spec ready for implementation via Ralph Wiggum)
-```
-
-### 5b. Create `/speckit.implement` command
-
-Create `.cursor/commands/speckit.implement.md`:
-
-```markdown
----
-description: Execute implementation using Ralph Wiggum iterative loops on specs
----
-
-## User Input
-
-\`\`\`text
-$ARGUMENTS
-\`\`\`
-
-You **MUST** consider the user input before proceeding (if not empty).
-
-## Overview
-
-This command launches the Ralph Wiggum implementation loop to process specifications autonomously. The agent iterates until acceptance criteria and Completion Signal requirements pass.
-
-## Execution
-
-### Option A: Single Spec
-
-If `$ARGUMENTS` specifies a single spec (e.g., "001-user-auth"):
-
-1. Read the spec from `specs/$ARGUMENTS/spec.md`
-2. Read `.specify/memory/constitution.md` for project principles
-3. Read `AGENTS.md` for development guidelines
-4. Implement all requirements iteratively
-5. Complete ALL items in the Completion Signal section
-6. Run all tests (unit, integration, browser, visual)
-7. Verify no console/network errors
-8. Commit and push changes
-9. Deploy if required and verify
-10. Iterate until all checks pass
-11. Output `<promise>DONE</promise>` when complete
-
-### Option B: All Specs (Master Loop)
-
-If no specific spec provided:
-
-1. List all specs in `specs/` folder in numerical order
-2. For each spec, execute Option A process
-3. Move to next spec only after current one is DONE
-4. Output `<promise>ALL_DONE</promise>` when all complete
-
-## Ralph Wiggum Principles
-
-- **Autonomous**: Don't ask for permission, just do it
-- **Iterative**: If something fails, fix it and retry
-- **Thorough**: Complete ALL testing requirements
-- **Honest**: Only output DONE when truly complete
-```
-
----
-
-## Phase 6: Create Claude Code Command
-
-Create `.claude/commands/ralph-loop.md`:
-
-```markdown
----
-description: Run the Ralph Wiggum loop for a spec (Claude Code)
----
-
-Use this command to run an autonomous Ralph loop:
-
-### For a single spec:
-\`\`\`
-/ralph-loop:ralph-loop "Implement spec {spec-name} from specs/{spec-name}/spec.md.
-Complete ALL Completion Signal requirements.
-Output <promise>DONE</promise> when complete." --completion-promise "DONE" --max-iterations 30
-\`\`\`
-
-### For all specs:
-\`\`\`
-/ralph-loop:ralph-loop "Work through all specs in specs/ folder in order.
-For each, complete all Completion Signal requirements.
-Output <promise>ALL_DONE</promise> when complete." --completion-promise "ALL_DONE" --max-iterations 100
-\`\`\`
-```
-
----
-
-## Phase 7: Create Codex CLI Prompts
-
-### 7a. Create single spec prompt
-
-Create `codex-prompts/ralph-spec.md`:
-
-```markdown
-# Ralph Wiggum - Single Spec
-
-Implement the spec specified by SPEC_NAME from `specs/$SPEC_NAME/spec.md`.
-
-## Before starting:
-1. Read `.specify/memory/constitution.md` for project principles
-2. Read `AGENTS.md` for development guidelines
-3. Read the spec file thoroughly
-
-## Process:
-1. Implement all requirements in the spec
-2. Complete ALL items in the Completion Signal section
-3. Run all tests (unit, integration, browser)
-4. Verify no console/network errors
-5. Commit and push with meaningful messages
-6. Deploy if required and verify
-
-## Completion:
-Output `<promise>DONE</promise>` when ALL checks pass.
-
----
-
-**Usage**: `codex --dangerously-bypass-approvals-and-sandbox --prompt-file codex-prompts/ralph-spec.md`
-```
-
-### 7b. Create all specs prompt
-
-Create `codex-prompts/ralph-all.md`:
-
-```markdown
-# Ralph Wiggum - All Specs
-
-Work through ALL specifications in the `specs/` folder, implementing each one until its acceptance criteria pass.
-
-## Before starting:
-1. Read `.specify/memory/constitution.md` for project principles
-2. Read `AGENTS.md` for development guidelines
-3. List all specs: `ls -d specs/*/`
-
-## For each spec in numerical order:
-1. Read `specs/{name}/spec.md`
-2. Implement all requirements
-3. Complete ALL items in the Completion Signal section
-4. Run all tests
-5. Commit and push
-6. Move to next spec only when current is DONE
-
-## Completion:
-Output `<promise>ALL_DONE</promise>` when ALL specs are complete.
-
----
-
-**Usage**: `codex --dangerously-bypass-approvals-and-sandbox --prompt-file codex-prompts/ralph-all.md`
-```
-
----
-
-## Phase 8: Create Ralph Loop Script
-
-Create `scripts/ralph-loop.sh` with this content and make it executable (`chmod +x scripts/ralph-loop.sh`):
+### 5a. Create `scripts/ralph-loop.sh` (for Claude Code)
 
 ```bash
 #!/bin/bash
 #
-# Ralph Loop - Universal runner for Ralph Wiggum
+# Ralph Loop - Claude Code Edition
 #
 # Usage:
-#   ./scripts/ralph-loop.sh --spec 001-project-setup
-#   ./scripts/ralph-loop.sh --all
+#   ./scripts/ralph-loop.sh --all              # All specs/issues
+#   ./scripts/ralph-loop.sh --spec 001-name    # Single spec
+#   ./scripts/ralph-loop.sh --issue 42         # Single GitHub issue
+#   ./scripts/ralph-loop.sh "Custom prompt"    # Free-form
 #
 
 set -e
 
-SPEC=""
-ALL=false
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+CONSTITUTION="$PROJECT_DIR/.specify/memory/constitution.md"
 
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Defaults
+MODE=""
+SPEC_NAME=""
+ISSUE_NUM=""
+PROMPT=""
+YOLO_MODE=false
+
+# Check constitution for YOLO mode
+if grep -q "YOLO Mode: ENABLED" "$CONSTITUTION" 2>/dev/null; then
+    YOLO_MODE=true
+fi
+
+# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -s|--spec) SPEC="$2"; shift 2 ;;
-        -a|--all) ALL=true; shift ;;
-        -h|--help)
-            echo "Usage: $0 [--spec NAME] [--all]"
-            echo "  --spec NAME  Run for a specific spec"
-            echo "  --all        Run for all specs"
+        --all|-a)
+            MODE="all"
+            shift
+            ;;
+        --spec|-s)
+            MODE="spec"
+            SPEC_NAME="$2"
+            shift 2
+            ;;
+        --issue|-i)
+            MODE="issue"
+            ISSUE_NUM="$2"
+            shift 2
+            ;;
+        --help|-h)
+            cat <<EOF
+Ralph Loop - Claude Code Edition
+
+Usage:
+  ./scripts/ralph-loop.sh --all              # All specs/issues
+  ./scripts/ralph-loop.sh --spec 001-name    # Single spec
+  ./scripts/ralph-loop.sh --issue 42         # Single GitHub issue  
+  ./scripts/ralph-loop.sh "Custom prompt"    # Free-form
+
+Options:
+  --all, -a          Process all work items
+  --spec, -s NAME    Process specific spec
+  --issue, -i NUM    Process specific GitHub issue
+  --help, -h         Show this help
+
+EOF
             exit 0
             ;;
-        *) shift ;;
+        -*)
+            echo -e "${RED}Unknown option: $1${NC}"
+            exit 1
+            ;;
+        *)
+            MODE="prompt"
+            PROMPT="$1"
+            shift
+            ;;
     esac
 done
 
-# Detect platform
-if command -v codex &> /dev/null; then
-    PLATFORM="codex"
-elif command -v claude &> /dev/null; then
-    PLATFORM="claude"
+cd "$PROJECT_DIR"
+
+# Build outer loop prompt (processes all items)
+build_all_prompt() {
+    cat <<EOF
+# OUTER RALPH LOOP - Process All Work Items
+
+Read the constitution at .specify/memory/constitution.md first.
+
+## Your Task
+
+Work through ALL work items (specs or issues) one by one until ALL are complete.
+
+## Process
+
+For EACH work item:
+1. Read the item (spec file or issue)
+2. Understand the acceptance criteria
+3. Implement the requirements
+4. Test thoroughly (unit, integration, visual)
+5. Verify acceptance criteria pass
+6. Commit and push changes
+7. Output \`<promise>DONE</promise>\` for that item
+8. Move to the next item
+
+## Completion
+
+When ALL items are complete and marked done:
+- Output \`<promise>ALL_DONE</promise>\`
+
+## Important
+
+- You have full autonomy (YOLO mode is ${YOLO_MODE})
+- Commit and push after each item
+- If something fails, fix it and retry
+- Only output DONE when truly complete
+EOF
+}
+
+# Build single spec prompt
+build_spec_prompt() {
+    local spec="$1"
+    cat <<EOF
+# INNER RALPH LOOP - Implement Single Spec
+
+Read the constitution at .specify/memory/constitution.md first.
+Then read the spec at specs/$spec/spec.md.
+
+## Your Task
+
+Implement this specification completely.
+
+## Process
+
+1. Read and understand the spec
+2. Implement all requirements
+3. Complete the Completion Signal checklist
+4. Run all tests
+5. Verify visually with browser tools
+6. Commit and push
+
+## Completion
+
+When ALL acceptance criteria in the spec pass:
+- Output \`<promise>DONE</promise>\`
+EOF
+}
+
+# Build issue prompt
+build_issue_prompt() {
+    local issue="$1"
+    cat <<EOF
+# INNER RALPH LOOP - Resolve GitHub Issue #$issue
+
+Read the constitution at .specify/memory/constitution.md first.
+Then read GitHub Issue #$issue using: gh issue view $issue
+
+## Your Task
+
+Resolve this issue completely.
+
+## Process
+
+1. Read and understand the issue
+2. Implement the fix/feature
+3. Verify the issue is resolved
+4. Run tests
+5. Commit and push
+6. Close the issue: gh issue close $issue
+
+## Completion
+
+When the issue is resolved and closed:
+- Output \`<promise>DONE</promise>\`
+EOF
+}
+
+# Build free-form prompt
+build_freeform_prompt() {
+    local user_prompt="$1"
+    cat <<EOF
+# RALPH LOOP - Custom Task
+
+Read the constitution at .specify/memory/constitution.md first.
+
+## Your Task
+
+$user_prompt
+
+## Process
+
+1. Understand the task
+2. Implement the solution
+3. Test thoroughly
+4. Commit and push
+
+## Completion
+
+When the task is complete:
+- Output \`<promise>DONE</promise>\`
+EOF
+}
+
+# Determine prompt
+case $MODE in
+    all)
+        FINAL_PROMPT=$(build_all_prompt)
+        echo -e "${GREEN}Starting Ralph loop for ALL work items...${NC}"
+        ;;
+    spec)
+        if [[ ! -d "specs/$SPEC_NAME" ]]; then
+            echo -e "${RED}Error: Spec '$SPEC_NAME' not found${NC}"
+            ls -1 specs/ 2>/dev/null
+            exit 1
+        fi
+        FINAL_PROMPT=$(build_spec_prompt "$SPEC_NAME")
+        echo -e "${GREEN}Starting Ralph loop for spec: $SPEC_NAME${NC}"
+        ;;
+    issue)
+        FINAL_PROMPT=$(build_issue_prompt "$ISSUE_NUM")
+        echo -e "${GREEN}Starting Ralph loop for issue #$ISSUE_NUM${NC}"
+        ;;
+    prompt)
+        FINAL_PROMPT=$(build_freeform_prompt "$PROMPT")
+        echo -e "${GREEN}Starting Ralph loop with custom prompt...${NC}"
+        ;;
+    *)
+        echo -e "${RED}Error: Specify --all, --spec NAME, --issue NUM, or a prompt${NC}"
+        exit 1
+        ;;
+esac
+
+echo -e "${BLUE}YOLO Mode: $YOLO_MODE${NC}"
+echo ""
+
+# Run with Claude
+if command -v claude &> /dev/null; then
+    claude "$FINAL_PROMPT"
 else
-    echo "Error: Neither 'codex' nor 'claude' CLI found."
-    echo "Install one of:"
-    echo "  npm install -g @openai/codex"
-    echo "  pip install claude-code"
+    echo "Claude CLI not found. Paste this prompt into Claude Code:"
+    echo ""
+    echo "$FINAL_PROMPT"
+fi
+
+echo ""
+echo -e "${GREEN}Ralph loop completed!${NC}"
+```
+
+Make it executable: `chmod +x scripts/ralph-loop.sh`
+
+### 5b. Create `scripts/ralph-loop-codex.sh` (for OpenAI Codex CLI)
+
+```bash
+#!/bin/bash
+#
+# Ralph Loop - Codex CLI Edition
+#
+# Usage:
+#   ./scripts/ralph-loop-codex.sh --all              # All specs/issues
+#   ./scripts/ralph-loop-codex.sh --spec 001-name    # Single spec
+#   ./scripts/ralph-loop-codex.sh --issue 42         # Single GitHub issue
+#   ./scripts/ralph-loop-codex.sh "Custom prompt"    # Free-form
+#
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+CONSTITUTION="$PROJECT_DIR/.specify/memory/constitution.md"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Defaults
+MODE=""
+SPEC_NAME=""
+ISSUE_NUM=""
+PROMPT=""
+YOLO_MODE=false
+CODEX_ARGS=""
+
+# Check constitution for YOLO mode
+if grep -q "YOLO Mode: ENABLED" "$CONSTITUTION" 2>/dev/null; then
+    YOLO_MODE=true
+    CODEX_ARGS="--dangerously-bypass-approvals-and-sandbox"
+fi
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --all|-a)
+            MODE="all"
+            shift
+            ;;
+        --spec|-s)
+            MODE="spec"
+            SPEC_NAME="$2"
+            shift 2
+            ;;
+        --issue|-i)
+            MODE="issue"
+            ISSUE_NUM="$2"
+            shift 2
+            ;;
+        --help|-h)
+            cat <<EOF
+Ralph Loop - Codex CLI Edition
+
+Usage:
+  ./scripts/ralph-loop-codex.sh --all              # All specs/issues
+  ./scripts/ralph-loop-codex.sh --spec 001-name    # Single spec
+  ./scripts/ralph-loop-codex.sh --issue 42         # Single GitHub issue  
+  ./scripts/ralph-loop-codex.sh "Custom prompt"    # Free-form
+
+Options:
+  --all, -a          Process all work items
+  --spec, -s NAME    Process specific spec
+  --issue, -i NUM    Process specific GitHub issue
+  --help, -h         Show this help
+
+YOLO Mode: ${YOLO_MODE} (from constitution)
+
+EOF
+            exit 0
+            ;;
+        -*)
+            echo -e "${RED}Unknown option: $1${NC}"
+            exit 1
+            ;;
+        *)
+            MODE="prompt"
+            PROMPT="$1"
+            shift
+            ;;
+    esac
+done
+
+cd "$PROJECT_DIR"
+
+# Build outer loop prompt (processes all items)
+build_all_prompt() {
+    cat <<EOF
+# OUTER RALPH LOOP - Process All Work Items
+
+Read the constitution at .specify/memory/constitution.md first.
+
+## Your Task
+
+Work through ALL work items (specs or issues) one by one until ALL are complete.
+
+## Process
+
+For EACH work item:
+1. Read the item (spec file or issue)
+2. Understand the acceptance criteria
+3. Implement the requirements
+4. Test thoroughly (unit, integration, visual)
+5. Verify acceptance criteria pass
+6. Commit and push changes
+7. Output \`<promise>DONE</promise>\` for that item
+8. Move to the next item
+
+## Completion
+
+When ALL items are complete and marked done:
+- Output \`<promise>ALL_DONE</promise>\`
+
+## Important
+
+- You have full autonomy (YOLO mode is ${YOLO_MODE})
+- Commit and push after each item
+- If something fails, fix it and retry
+- Only output DONE when truly complete
+EOF
+}
+
+# Build single spec prompt
+build_spec_prompt() {
+    local spec="$1"
+    cat <<EOF
+# INNER RALPH LOOP - Implement Single Spec
+
+Read the constitution at .specify/memory/constitution.md first.
+Then read the spec at specs/$spec/spec.md.
+
+## Your Task
+
+Implement this specification completely.
+
+## Process
+
+1. Read and understand the spec
+2. Implement all requirements
+3. Complete the Completion Signal checklist
+4. Run all tests
+5. Verify visually with browser tools
+6. Commit and push
+
+## Completion
+
+When ALL acceptance criteria in the spec pass:
+- Output \`<promise>DONE</promise>\`
+EOF
+}
+
+# Build issue prompt
+build_issue_prompt() {
+    local issue="$1"
+    cat <<EOF
+# INNER RALPH LOOP - Resolve GitHub Issue #$issue
+
+Read the constitution at .specify/memory/constitution.md first.
+Then read GitHub Issue #$issue using: gh issue view $issue
+
+## Your Task
+
+Resolve this issue completely.
+
+## Process
+
+1. Read and understand the issue
+2. Implement the fix/feature
+3. Verify the issue is resolved
+4. Run tests
+5. Commit and push
+6. Close the issue: gh issue close $issue
+
+## Completion
+
+When the issue is resolved and closed:
+- Output \`<promise>DONE</promise>\`
+EOF
+}
+
+# Build free-form prompt
+build_freeform_prompt() {
+    local user_prompt="$1"
+    cat <<EOF
+# RALPH LOOP - Custom Task
+
+Read the constitution at .specify/memory/constitution.md first.
+
+## Your Task
+
+$user_prompt
+
+## Process
+
+1. Understand the task
+2. Implement the solution
+3. Test thoroughly
+4. Commit and push
+
+## Completion
+
+When the task is complete:
+- Output \`<promise>DONE</promise>\`
+EOF
+}
+
+# Check codex is installed
+if ! command -v codex &> /dev/null; then
+    echo -e "${RED}Error: Codex CLI not found${NC}"
+    echo "Install: npm install -g @openai/codex"
+    echo "Login:   codex --login"
     exit 1
 fi
 
-echo "Using platform: $PLATFORM"
-
-if [[ "$PLATFORM" == "codex" ]]; then
-    if [[ "$ALL" == true ]]; then
-        codex --dangerously-bypass-approvals-and-sandbox --prompt-file codex-prompts/ralph-all.md
-    elif [[ -n "$SPEC" ]]; then
-        SPEC_NAME="$SPEC" codex --dangerously-bypass-approvals-and-sandbox --prompt-file codex-prompts/ralph-spec.md
-    else
-        echo "Specify --spec NAME or --all"
+# Determine prompt
+case $MODE in
+    all)
+        FINAL_PROMPT=$(build_all_prompt)
+        echo -e "${GREEN}Starting Ralph loop for ALL work items...${NC}"
+        ;;
+    spec)
+        if [[ ! -d "specs/$SPEC_NAME" ]]; then
+            echo -e "${RED}Error: Spec '$SPEC_NAME' not found${NC}"
+            ls -1 specs/ 2>/dev/null
+            exit 1
+        fi
+        FINAL_PROMPT=$(build_spec_prompt "$SPEC_NAME")
+        echo -e "${GREEN}Starting Ralph loop for spec: $SPEC_NAME${NC}"
+        ;;
+    issue)
+        FINAL_PROMPT=$(build_issue_prompt "$ISSUE_NUM")
+        echo -e "${GREEN}Starting Ralph loop for issue #$ISSUE_NUM${NC}"
+        ;;
+    prompt)
+        FINAL_PROMPT=$(build_freeform_prompt "$PROMPT")
+        echo -e "${GREEN}Starting Ralph loop with custom prompt...${NC}"
+        ;;
+    *)
+        echo -e "${RED}Error: Specify --all, --spec NAME, --issue NUM, or a prompt${NC}"
         exit 1
-    fi
-elif [[ "$PLATFORM" == "claude" ]]; then
-    if [[ "$ALL" == true ]]; then
-        echo "Run in Claude Code: /ralph-loop:ralph-loop with ALL specs prompt"
-    elif [[ -n "$SPEC" ]]; then
-        echo "Run in Claude Code: /ralph-loop:ralph-loop with spec $SPEC"
-    fi
+        ;;
+esac
+
+echo -e "${BLUE}YOLO Mode: $YOLO_MODE${NC}"
+if [[ "$YOLO_MODE" == "true" ]]; then
+    echo -e "${YELLOW}Using: --dangerously-bypass-approvals-and-sandbox${NC}"
 fi
+echo ""
+
+# Run with Codex
+if [[ -n "$CODEX_ARGS" ]]; then
+    codex $CODEX_ARGS "$FINAL_PROMPT"
+else
+    codex "$FINAL_PROMPT"
+fi
+
+echo ""
+echo -e "${GREEN}Ralph loop completed!${NC}"
 ```
+
+Make it executable: `chmod +x scripts/ralph-loop-codex.sh`
 
 ---
 
-## Phase 9: Create AGENTS.md for the User's Project
+## Phase 6: Create Slash Commands
 
-Create `AGENTS.md` in the project root:
+### 6a. Create `.cursor/commands/speckit.specify.md`
+
+[Copy the spec template from templates/speckit.specify.md - this creates new specs]
+
+### 6b. Create `.cursor/commands/speckit.implement.md`
 
 ```markdown
-# Agent Instructions
-
-> Instructions for AI coding agents working on this project
-
-## Quick Start
-
-1. Read `.specify/memory/constitution.md` for project principles
-2. Read this file for development guidelines
-3. Check `specs/` for feature specifications
-
-## Development Workflow
-
-This project uses **Ralph Wiggum + SpecKit**:
-
-1. `/speckit.specify [feature]` - Create a feature specification
-2. `/speckit.implement` - Implement specs autonomously
-
-## Autonomous Mode (YOLO)
-
-You are expected to work **fully autonomously**:
-
-- Commit and push without asking
-- Deploy without asking
-- Fix issues and iterate
-- Only ask when truly stuck
-
-## Completion Signals
-
-Every spec has a Completion Signal section. You MUST:
-- Complete ALL checklist items
-- Pass ALL tests
-- Verify visually with browser tools
-- Output `<promise>DONE</promise>` when complete
-```
-
+---
+description: Start the Ralph loop to implement specs
 ---
 
-## Phase 10: Verify Installation
+## User Input
 
-After creating all files, verify they exist:
+\`\`\`text
+$ARGUMENTS
+\`\`\`
 
-```bash
-ls -la .specify/memory/constitution.md
-ls -la templates/spec-template.md
-ls -la templates/checklist-template.md
-ls -la .cursor/commands/speckit.specify.md
-ls -la .cursor/commands/speckit.implement.md
-ls -la .claude/commands/ralph-loop.md
-ls -la codex-prompts/ralph-spec.md
-ls -la codex-prompts/ralph-all.md
-ls -la scripts/ralph-loop.sh
-ls -la AGENTS.md
-```
+## Action
 
----
+Tell the user how to start the Ralph loop:
 
-## Phase 11: Tell the User
-
-**After completing all phases, inform the user:**
-
-> **✅ Ralph Wiggum is now installed!**
+> **Ready to start implementing!**
 > 
-> **Next steps:**
+> Run one of these commands in your terminal:
 > 
-> 1. **Customize your constitution**: Edit `.specify/memory/constitution.md`
->    - Replace `[PROJECT_NAME]` with your project name
->    - Replace `[PROJECT_DESCRIPTION]` with what your project does
->    - Fill in the `[PLACEHOLDER]` sections with your specifics
->    - Add your tech stack and principles
-> 
-> 2. **Create your first spec**: Use `/speckit.specify` followed by a feature description
->    - Example: `/speckit.specify Add user authentication with OAuth`
-> 
-> 3. **Implement autonomously**: Use `/speckit.implement` to have me build it
-> 
-> **Available commands:**
-> - `/speckit.specify [feature]` - Create a spec
-> - `/speckit.implement` - Implement specs with Ralph Wiggum loop
-> 
-> **For Codex CLI users:**
-> ```bash
-> ./scripts/ralph-loop.sh --spec 001-project-setup
+> **For Claude Code:**
+> \`\`\`bash
 > ./scripts/ralph-loop.sh --all
-> ```
+> \`\`\`
+> 
+> **For Codex CLI:**
+> \`\`\`bash
+> ./scripts/ralph-loop-codex.sh --all
+> \`\`\`
+> 
+> Or for a specific spec:
+> \`\`\`bash
+> ./scripts/ralph-loop.sh --spec [SPEC_NAME]
+> \`\`\`
+```
+
+---
+
+## Phase 7: Create Templates
+
+### 7a. Create `templates/spec-template.md`
+
+[Include the standard spec template with Completion Signal section]
+
+### 7b. Create `templates/checklist-template.md`
+
+[Include the standard checklist template]
+
+---
+
+## Phase 8: Configure CLI Tools for YOLO Mode
+
+**If the user enabled YOLO mode:**
+
+### 8a. Claude Code Config
+
+Tell the user to add to their Claude Code settings or `~/.claude/settings.json`:
+```json
+{
+  "permissions": {
+    "allow_file_write": true,
+    "allow_file_read": true,
+    "allow_command_execution": true,
+    "allow_web_requests": true
+  }
+}
+```
+
+### 8b. Codex Config
+
+The script already uses `--dangerously-bypass-approvals-and-sandbox` when YOLO mode is enabled in the constitution.
+
+---
+
+## Phase 9: Final Summary
+
+After completing all phases, tell the user:
+
+```
+## ✅ Ralph Wiggum is now installed!
+
+### What was created:
+- `.specify/memory/constitution.md` — Your project's single source of truth
+- `scripts/ralph-loop.sh` — Ralph loop for Claude Code
+- `scripts/ralph-loop-codex.sh` — Ralph loop for Codex CLI
+- `.cursor/commands/` — Cursor slash commands
+- `AGENTS.md` & `CLAUDE.md` — Point to constitution
+
+### Your settings:
+- YOLO Mode: [ENABLED/DISABLED]
+- Git Autonomy: [ENABLED/DISABLED]
+- Work Item Source: [SpecKit Specs / GitHub Issues / Custom]
+
+### Next steps:
+
+**Option A: Create specifications**
+Use `/speckit.specify [feature description]` to create your first spec.
+
+**Option B: Use GitHub Issues**
+Create issues in your GitHub repo with clear acceptance criteria.
+
+### Start working!
+
+When you're ready to start the Ralph loop, just say:
+
+> "Ralph, start working"
+
+I'll give you the terminal command to run.
+```
 
 ---
 
 ## Credits
 
-This approach is inspired by:
-- [Ralph Wiggum technique](https://awesomeclaude.ai/ralph-wiggum) by the Claude community
-- [How to Ralph Wiggum](https://github.com/ghuntley/how-to-ralph-wiggum) by Geoffrey Huntley
+This setup process is inspired by:
 - [SpecKit](https://github.com/github/spec-kit) by GitHub
+- [Ralph Wiggum](https://awesomeclaude.ai/ralph-wiggum) by the Claude community
+- [How to Ralph Wiggum](https://github.com/ghuntley/how-to-ralph-wiggum) by Geoffrey Huntley
