@@ -47,7 +47,12 @@ chmod +x scripts/ralph-loop.sh scripts/ralph-loop-codex.sh
 
 ## Phase 3: Interview User & Create Constitution
 
-**YOU MUST INTERVIEW THE USER** to gather the following information. Present questions one at a time and wait for responses.
+**YOU MUST INTERVIEW THE USER** to gather the following information. 
+
+Before starting the interview, explain to the user:
+> "I'll ask you a few questions about your project. This creates a **constitution** — a document that ensures I always understand the basics of your project and any rules I should follow when working on it. This is helpful because it keeps me aligned with your project's principles across all future sessions."
+
+Present questions one at a time and wait for responses.
 
 ### Question 1: Project Name
 > "What is the name of your project?"
