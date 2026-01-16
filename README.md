@@ -7,7 +7,7 @@
 ## Quick Start
 
 **AI Agent? Start Here:**
-> Read and execute [INSTALLATION.md](INSTALLATION.md) for a guided setup.
+> Read and execute [INSTALLATION.md](INSTALLATION.md) for a guided setup with interactive interview.
 
 **Human Developer? Start Here:**
 > Read [INSTALL.md](INSTALL.md) for manual setup instructions.
@@ -16,19 +16,21 @@
 
 ## What is Ralph Wiggum?
 
-Ralph Wiggum is an approach to **fully autonomous AI-assisted software development** that combines:
+Ralph Wiggum combines **Geoffrey Huntley's iterative bash loop** with **SpecKit-style specifications** for fully autonomous AI-assisted software development.
 
-- 🔄 **Iterative self-correction** — Each iteration picks ONE task from the plan, implements it, and commits
-- 📋 **Spec-driven development** — Professional-grade specifications guide the work
-- 🎯 **Fresh context each loop** — Every iteration starts with a clean context window
-- 📝 **Shared state via files** — `IMPLEMENTATION_PLAN.md` persists between loops
-- ⚡ **Backpressure via tests** — Tests/builds reject invalid work
+### Key Features
+
+- 🔄 **Iterative Self-Correction** — Each loop picks ONE task, implements it, verifies, and commits
+- 📋 **Spec-Driven Development** — Professional specifications with clear acceptance criteria
+- 🎯 **Completion Verification** — Agent only outputs `<promise>DONE</promise>` when criteria are 100% met
+- 🧠 **Fresh Context Each Loop** — Every iteration starts with a clean context window
+- 📝 **Shared State on Disk** — `IMPLEMENTATION_PLAN.md` persists between loops
 
 ---
 
 ## How It Works
 
-Based on [Geoffrey Huntley's Ralph Wiggum methodology](https://github.com/ghuntley/how-to-ralph-wiggum):
+Based on [Geoffrey Huntley's methodology](https://github.com/ghuntley/how-to-ralph-wiggum):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -36,117 +38,178 @@ Based on [Geoffrey Huntley's Ralph Wiggum methodology](https://github.com/ghuntl
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │    Orient    │───▶│   Pick Task  │───▶│  Implement   │  │
+│  │    Orient    │───▶│  Pick Task   │───▶│  Implement   │  │
 │  │  Read specs  │    │  from Plan   │    │   & Test     │  │
 │  └──────────────┘    └──────────────┘    └──────────────┘  │
 │                                                   │         │
 │         ┌────────────────────────────────────────┘         │
 │         ▼                                                   │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │    Commit    │───▶│ Update Plan  │───▶│ Fresh Start  │  │
-│  │   & Push     │    │   on Disk    │    │ (Loop Again) │  │
+│  │   Verify     │───▶│   Commit     │───▶│  Output DONE │  │
+│  │  Criteria    │    │   & Push     │    │  (if passed) │  │
 │  └──────────────┘    └──────────────┘    └──────────────┘  │
+│                                                   │         │
+│         ┌────────────────────────────────────────┘         │
+│         ▼                                                   │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Bash loop checks for <promise>DONE</promise>         │  │
+│  │ If found: next iteration | If not: retry             │  │
+│  └──────────────────────────────────────────────────────┘  │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Two Modes, Same Loop
+### The Magic Phrase
 
-| Mode | Purpose | Prompt File |
-|------|---------|-------------|
-| **plan** | Gap analysis: compare specs vs code, create prioritized task list | `PROMPT_plan.md` |
-| **build** | Implementation: pick task, implement, test, commit | `PROMPT_build.md` |
+The agent outputs `<promise>DONE</promise>` **ONLY** when:
+- All acceptance criteria are verified
+- Tests pass
+- Changes are committed and pushed
+
+The bash loop checks for this phrase. If not found, it retries.
+
+---
+
+## Two Modes
+
+| Mode | Purpose | Command |
+|------|---------|---------|
+| **plan** | Gap analysis: compare specs vs code, create task list | `./scripts/ralph-loop.sh plan` |
+| **build** | Implementation: pick task, implement, test, commit | `./scripts/ralph-loop.sh` |
+
+---
+
+## Installation
+
+### For AI Agents
+
+Point your AI agent to this repo and say:
+
+> "Set up Ralph Wiggum in my project using https://github.com/fstandhartinger/ralph-wiggum"
+
+The agent will:
+1. Create all necessary files
+2. Interview you about your project
+3. Create a constitution.md with your preferences
+4. Set up the bash loop scripts
+5. Explain how to create specs and run Ralph
+
+### Manual Setup
+
+See [INSTALL.md](INSTALL.md) for step-by-step manual instructions.
 
 ---
 
 ## Usage
 
+### 1. Create Specifications
+
+Use `/speckit.specify` in Cursor or describe features to your AI:
+
+```
+/speckit.specify Add user authentication with OAuth
+```
+
+This creates `specs/001-user-auth/spec.md` with:
+- Feature requirements
+- Acceptance criteria
+- Completion signal section
+
+### 2. Run Planning Mode
+
 ```bash
-# Planning mode - creates/updates IMPLEMENTATION_PLAN.md
 ./scripts/ralph-loop.sh plan
+```
 
-# Build mode - implements from plan
-./scripts/ralph-loop.sh          # Unlimited iterations
-./scripts/ralph-loop.sh 20       # Max 20 iterations
+Creates `IMPLEMENTATION_PLAN.md` with prioritized tasks.
 
-# Using Codex instead of Claude
+### 3. Run Build Mode
+
+```bash
+./scripts/ralph-loop.sh        # Unlimited iterations
+./scripts/ralph-loop.sh 20     # Max 20 iterations
+```
+
+Each iteration:
+1. Picks the highest priority task
+2. Implements it completely
+3. Verifies acceptance criteria
+4. Outputs `<promise>DONE</promise>` only if criteria pass
+5. Bash loop checks for the phrase
+6. Context cleared, next iteration starts
+
+### Using Codex Instead
+
+```bash
 ./scripts/ralph-loop-codex.sh plan
-./scripts/ralph-loop-codex.sh 20
+./scripts/ralph-loop-codex.sh
 ```
 
-### Key Files
+---
+
+## File Structure
 
 ```
-project-root/
+project/
+├── .specify/
+│   └── memory/
+│       └── constitution.md      # Project principles & config
+├── specs/
+│   └── NNN-feature-name/
+│       └── spec.md              # Feature specification
 ├── scripts/
 │   ├── ralph-loop.sh            # Claude Code loop
 │   └── ralph-loop-codex.sh      # OpenAI Codex loop
 ├── PROMPT_build.md              # Build mode instructions
 ├── PROMPT_plan.md               # Planning mode instructions
 ├── IMPLEMENTATION_PLAN.md       # Shared state (task list)
-├── AGENTS.md                    # Operational guide
-└── specs/                       # Requirement specifications
-    └── NNN-feature-name/
-        └── spec.md
+├── AGENTS.md                    # Points to constitution
+└── CLAUDE.md                    # Points to constitution
 ```
 
 ---
 
 ## Core Principles
 
-### 1. Context Is Everything
-- Each iteration gets a fresh context window
-- Agent reads the same files every time: `PROMPT.md` + `AGENTS.md`
-- `IMPLEMENTATION_PLAN.md` is the shared state on disk
+### 1. Fresh Context Each Loop
+Each iteration gets a clean context window. The agent reads files from disk each time.
 
-### 2. One Task Per Loop
-- Each iteration selects ONE task from the plan
-- Implements it completely
-- Commits and pushes
-- Exits (context garbage collected)
+### 2. Shared State on Disk
+`IMPLEMENTATION_PLAN.md` persists between loops. Agent reads it to pick tasks, updates it with progress.
 
 ### 3. Backpressure via Tests
-- Tests, lints, builds reject invalid work
-- Agent must fix issues before committing
-- Natural convergence through iteration
+Tests, lints, and builds reject invalid work. Agent must fix issues before the magic phrase.
 
-### 4. Let Ralph Ralph
-- Trust the AI to self-identify, self-correct, and self-improve
-- Don't micromanage task selection
-- Observe patterns and adjust prompts/guardrails
+### 4. Completion Verification
+Agent only outputs `<promise>DONE</promise>` when acceptance criteria are 100% verified. The bash loop enforces this.
 
----
-
-## Supported Platforms
-
-| Platform | Script | YOLO Flag |
-|----------|--------|-----------|
-| Claude Code | `ralph-loop.sh` | `--dangerously-skip-permissions` |
-| OpenAI Codex | `ralph-loop-codex.sh` | `--dangerously-bypass-approvals-and-sandbox` |
-| Cursor | Interactive (use `/speckit.implement`) | N/A |
+### 5. Let Ralph Ralph
+Trust the AI to self-identify, self-correct, and self-improve. Observe patterns and adjust prompts.
 
 ---
 
-## Getting Started
+## Alternative Spec Sources
 
-1. **Clone this template** or copy the files to your project
-2. **Create your specs** in `specs/` folder
-3. **Run planning mode** to create the task list: `./scripts/ralph-loop.sh plan`
-4. **Run build mode** to implement: `./scripts/ralph-loop.sh`
-5. **Watch and observe** — adjust prompts as patterns emerge
+During installation, you can choose:
+
+1. **SpecKit Specs** (default) — Markdown files in `specs/`
+2. **GitHub Issues** — Fetch from a repository
+3. **Custom Source** — Your own mechanism
+
+The constitution and prompts adapt accordingly.
 
 ---
 
 ## Credits
 
-This approach builds upon and is inspired by:
+This approach builds upon:
 
-- [Geoffrey Huntley's how-to-ralph-wiggum](https://github.com/ghuntley/how-to-ralph-wiggum) — The original comprehensive guide
+- [Geoffrey Huntley's how-to-ralph-wiggum](https://github.com/ghuntley/how-to-ralph-wiggum) — The original methodology
 - [Original Ralph Wiggum technique](https://awesomeclaude.ai/ralph-wiggum) — By the Claude community
 - [Claude Code Ralph Wiggum plugin](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum)
 - [SpecKit](https://github.com/github/spec-kit) by GitHub — Spec-driven development
 
-Our contribution is simplifying the setup and providing a ready-to-use template that integrates these approaches.
+Our contribution: Combining the bash loop approach with SpecKit-style specifications and a smooth AI-driven installation process.
 
 ---
 

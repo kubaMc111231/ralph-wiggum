@@ -11,21 +11,27 @@
 Create these directories in the user's project:
 
 ```bash
+mkdir -p .specify/memory
+mkdir -p .specify/specs
 mkdir -p specs
 mkdir -p scripts
 mkdir -p logs
+mkdir -p templates
+mkdir -p .cursor/commands
+mkdir -p .claude/commands
 ```
 
 ---
 
-## Phase 2: Copy Core Files
+## Phase 2: Copy Core Files from Templates
 
-Copy the following files from this repository's `templates/` folder to the user's project root:
+Copy these files from this repository's `templates/` folder:
 
 1. `templates/PROMPT_build.md` → `PROMPT_build.md`
 2. `templates/PROMPT_plan.md` → `PROMPT_plan.md`
 3. `templates/AGENTS.md` → `AGENTS.md`
 4. `templates/IMPLEMENTATION_PLAN.md` → `IMPLEMENTATION_PLAN.md`
+5. `templates/spec-template.md` → `templates/spec-template.md`
 
 Copy the loop scripts:
 
@@ -40,30 +46,264 @@ chmod +x scripts/ralph-loop.sh scripts/ralph-loop-codex.sh
 
 ---
 
-## Phase 3: Customize for Project
+## Phase 3: Interview User & Create Constitution
 
-Ask the user these questions to customize the setup:
+**YOU MUST INTERVIEW THE USER** to gather the following information. Present questions one at a time and wait for responses.
 
 ### Question 1: Project Name
 > "What is the name of your project?"
 
-### Question 2: Build Commands
-> "What commands are used to build/run your project? (e.g., npm install, npm run dev)"
+### Question 2: Project Description  
+> "Please provide a brief description of your project (1-2 sentences)."
 
-### Question 3: Test Commands
-> "What commands are used to test your project? (e.g., npm test, npm run lint)"
+### Question 3: Core Principles
+> "What are 2-3 core principles or values for your project? Examples: 'API-First', 'User-Centric Design', 'Performance Focus', 'Security First'"
 
-### Question 4: Project Structure
-> "Where is your main source code located? (e.g., src/, app/, lib/)"
+### Question 4: Technical Stack
+> "What is your project's primary technical stack? Examples: 'Next.js, TypeScript, Tailwind CSS' or 'Python, FastAPI, PostgreSQL'"
 
-Use the answers to update `AGENTS.md` with the correct:
-- Build & Run commands
-- Validation commands
-- Project structure description
+### Question 5: Source Code Location
+> "Where is your main source code located? (e.g., 'src/', 'app/', 'lib/')"
+
+### Question 6: Test Commands
+> "What commands run your tests? (e.g., 'npm test', 'pytest', 'go test ./...')"
+
+### Question 7: YOLO Mode (Full Autonomy)
+
+Present this carefully:
+
+> "Do you want your AI agent to operate in **YOLO Mode** (full autonomy)?
+> 
+> **What this means:**
+> - Claude Code: Uses `--dangerously-skip-permissions`
+> - Codex: Uses `--dangerously-bypass-approvals-and-sandbox`
+> - Agent commits, pushes, and executes commands without asking
+> 
+> **⚠️ WARNING:** This bypasses all permission prompts. Only use in:
+> - Isolated/sandboxed environments
+> - Projects with good test coverage
+> - When you trust the AI with full system access
+> 
+> **STRONGLY RECOMMENDED** for Ralph to work properly. Without YOLO mode, the loop will constantly pause for approvals.
+> 
+> Enable YOLO Mode? (yes/no)"
+
+### Question 8: Git Autonomy
+
+> "Do you want the AI to **autonomously commit and push** to your git repository without asking?
+> 
+> **RECOMMENDED:** Yes. This allows Ralph to make incremental progress and persist work between iterations.
+> 
+> Enable Git Autonomy? (yes/no)"
+
+### Question 9: Work Item Source
+
+> "Where will your specifications/work items come from?
+> 
+> **Options:**
+> 1. **SpecKit Specs** (Recommended) - Markdown files in `specs/` folder created via `/speckit.specify`
+> 2. **GitHub Issues** - Fetch issues from a GitHub repository
+> 3. **Custom Source** - You'll provide a custom mechanism
+> 
+> Choose 1, 2, or 3:"
+
+If they choose GitHub Issues, ask:
+> "What is your GitHub repository URL? (e.g., https://github.com/username/repo)"
 
 ---
 
-## Phase 4: Explain the Workflow
+## Phase 4: Create Constitution
+
+Create `.specify/memory/constitution.md` using the user's answers:
+
+```markdown
+# [PROJECT_NAME] Constitution
+
+> [PROJECT_DESCRIPTION]
+
+## Version
+1.0.0
+
+---
+
+## Context Detection for AI Agents
+
+This constitution is read by AI agents in two different contexts:
+
+### 1. Interactive Mode
+When the user is chatting with you outside of a Ralph loop:
+- Be conversational and helpful
+- Ask clarifying questions
+- Guide the user through decisions
+- Help create specifications via `/speckit.specify`
+
+### 2. Ralph Loop Mode  
+When you're running inside a Ralph bash loop:
+- Be fully autonomous
+- Pick the highest priority task from IMPLEMENTATION_PLAN.md
+- Implement completely without asking
+- Test thoroughly
+- Commit and push (if Git Autonomy enabled)
+- Output `<promise>DONE</promise>` ONLY when task is 100% complete
+
+**How to detect your mode:** If you're being fed a prompt via stdin with instructions to pick a task from IMPLEMENTATION_PLAN.md, you're in Ralph Loop Mode.
+
+---
+
+## Core Principles
+
+### I. [PRINCIPLE_1]
+[Description]
+
+### II. [PRINCIPLE_2]
+[Description]
+
+### III. Simplicity & YAGNI
+Build exactly what's needed, nothing more. No premature abstractions.
+
+---
+
+## Technical Stack
+
+| Layer | Technology |
+|-------|------------|
+| [Layer] | [Tech] |
+
+---
+
+## Project Structure
+
+Source code: `[SOURCE_LOCATION]`
+
+---
+
+## Ralph Wiggum Configuration
+
+### Autonomy Settings
+- **YOLO Mode**: [ENABLED/DISABLED]
+- **Git Autonomy**: [ENABLED/DISABLED]
+
+### Work Item Source
+- **Source**: [SpecKit Specs / GitHub Issues / Custom]
+- **Location**: [specs/ folder / GitHub URL / Custom path]
+
+### Ralph Loop Scripts
+Located in `scripts/`:
+- `ralph-loop.sh` - For Claude Code
+- `ralph-loop-codex.sh` - For OpenAI Codex
+
+**Usage:**
+```bash
+# Planning mode - creates IMPLEMENTATION_PLAN.md from specs
+./scripts/ralph-loop.sh plan
+
+# Build mode - implements tasks one by one
+./scripts/ralph-loop.sh
+
+# With max iterations
+./scripts/ralph-loop.sh 20
+```
+
+---
+
+## Development Workflow
+
+### Creating Specifications (SpecKit approach)
+Use `/speckit.specify` to create feature specifications:
+1. Describe the feature in natural language
+2. Agent generates professional spec with acceptance criteria
+3. Spec saved to `specs/NNN-feature-name/spec.md`
+
+### Running Ralph Loop
+1. Run `./scripts/ralph-loop.sh plan` to create task list
+2. Run `./scripts/ralph-loop.sh` to start building
+3. Each iteration picks ONE task and completes it
+4. Loop continues until all tasks done or max iterations
+
+### Completion Signal
+- Per-task: `<promise>DONE</promise>` when acceptance criteria pass
+- Agent MUST verify all criteria before outputting this signal
+
+---
+
+## Validation Commands
+
+```bash
+[TEST_COMMANDS]
+```
+
+---
+
+## Governance
+
+- **Amendments**: Update this file, increment version
+- **Compliance**: Follow principles in spirit, not just letter
+
+---
+
+**Created**: [DATE]
+```
+
+---
+
+## Phase 5: Create AGENTS.md and CLAUDE.md
+
+Create `AGENTS.md`:
+
+```markdown
+# Agent Instructions
+
+**Read the constitution**: `.specify/memory/constitution.md`
+
+That file is your single source of truth for working on this project.
+```
+
+Create `CLAUDE.md` (same content):
+
+```markdown
+# Claude Code Instructions
+
+**Read the constitution**: `.specify/memory/constitution.md`
+
+That file is your single source of truth for working on this project.
+```
+
+---
+
+## Phase 6: Set Up Cursor Commands (Optional)
+
+If using Cursor, create `.cursor/commands/speckit.specify.md`:
+
+```markdown
+---
+description: Create a feature specification from natural language
+---
+
+Create a professional specification for this feature:
+
+$ARGUMENTS
+
+## Process
+
+1. Generate a short name for the spec folder (2-4 words)
+2. Find next spec number: `ls -d specs/[0-9]*/ 2>/dev/null | sort -t/ -k2 -n`
+3. Create `specs/NNN-short-name/spec.md` using the spec template
+4. Include a **Completion Signal** section with:
+   - Implementation checklist
+   - Testing requirements  
+   - Acceptance criteria
+   - `**Output when ALL checks pass**: \`<promise>DONE</promise>\``
+
+## Guidelines
+
+- Focus on WHAT users need, not HOW to implement
+- Make requirements testable and unambiguous
+- Include clear acceptance criteria
+```
+
+---
+
+## Phase 7: Explain Next Steps to User
 
 Tell the user:
 
@@ -71,94 +311,70 @@ Tell the user:
 
 ### ✅ Ralph Wiggum is Ready!
 
-Based on [Geoffrey Huntley's methodology](https://github.com/ghuntley/how-to-ralph-wiggum), your project is now set up with:
+Your project is now set up with the Ralph Wiggum + SpecKit approach.
 
 **Files created:**
-- `PROMPT_build.md` — Instructions for build iterations
-- `PROMPT_plan.md` — Instructions for planning iterations
-- `AGENTS.md` — Operational guide (how to build/test)
+- `.specify/memory/constitution.md` — Your project's source of truth
+- `PROMPT_build.md` & `PROMPT_plan.md` — Ralph loop prompts
 - `IMPLEMENTATION_PLAN.md` — Shared state between loops
-- `scripts/ralph-loop.sh` — Claude Code loop script
-- `scripts/ralph-loop-codex.sh` — OpenAI Codex loop script
-
-**How it works:**
-1. Each iteration feeds `PROMPT.md` to the AI agent via stdin
-2. Agent reads `IMPLEMENTATION_PLAN.md` to pick the next task
-3. Agent implements, tests, and commits
-4. Loop restarts with fresh context
-5. Agent reads updated plan, picks next task
-
-**Two modes:**
-- **Plan mode**: Creates task list from specs → `./scripts/ralph-loop.sh plan`
-- **Build mode**: Implements from plan → `./scripts/ralph-loop.sh`
+- `scripts/ralph-loop.sh` — Claude Code loop
+- `scripts/ralph-loop-codex.sh` — Codex loop
 
 ---
 
-### Next Steps
+### Your Workflow
 
-1. **Create your specifications** in `specs/` folder:
-   ```
-   specs/
-   └── 001-my-feature/
-       └── spec.md
-   ```
+**Step 1: Create Specifications**
 
-2. **Run planning mode** to analyze specs and create the task list:
-   ```bash
-   ./scripts/ralph-loop.sh plan
-   ```
+Use `/speckit.specify` (in Cursor) or describe features to me:
+```
+/speckit.specify Add user authentication with OAuth
+```
 
-3. **Run build mode** to implement:
-   ```bash
-   ./scripts/ralph-loop.sh        # Unlimited iterations
-   ./scripts/ralph-loop.sh 20     # Max 20 iterations
-   ```
+I'll create a professional spec with acceptance criteria.
 
-4. **Watch and observe** — Ralph may need guidance at first. Adjust prompts as patterns emerge.
+**Step 2: Run Planning Mode**
 
----
-
-### The Magic Words
-
-When you're ready to start Ralph:
-
-**Claude Code:**
+When you have specs ready:
 ```bash
-./scripts/ralph-loop.sh
+./scripts/ralph-loop.sh plan
 ```
 
-**OpenAI Codex:**
-```bash
-./scripts/ralph-loop-codex.sh
-```
+This creates a prioritized task list in IMPLEMENTATION_PLAN.md.
 
-**Stop anytime:** Press `Ctrl+C`
+**Step 3: The Magic Word**
+
+When you're ready for Ralph to start building, just say:
+
+> **"Start Ralph"** or **"Let Ralph work"**
+
+I'll tell you the exact command to run in your terminal.
 
 ---
 
-## Files Reference
+### How the Loop Works
 
 ```
-project-root/
-├── scripts/
-│   ├── ralph-loop.sh            # Claude Code loop
-│   └── ralph-loop-codex.sh      # OpenAI Codex loop
-├── PROMPT_build.md              # Build mode instructions
-├── PROMPT_plan.md               # Planning mode instructions
-├── IMPLEMENTATION_PLAN.md       # Shared state (task list)
-├── AGENTS.md                    # Operational guide
-├── logs/                        # Iteration logs
-└── specs/                       # Your specifications
-    └── NNN-feature-name/
-        └── spec.md
+Loop 1: Read plan → Pick task A → Implement → Test → Commit → <DONE>
+Loop 2: Read plan → Pick task B → Implement → Test → Commit → <DONE>
+Loop 3: Read plan → Pick task C → Implement → Test → Commit → <DONE>
+...
 ```
+
+Each iteration gets fresh context. The plan on disk is the shared state.
 
 ---
 
-## YOLO Mode
+### Quick Reference
 
-Both scripts run in YOLO mode by default:
-- Claude: `--dangerously-skip-permissions`
-- Codex: `--dangerously-bypass-approvals-and-sandbox`
+| Action | Command |
+|--------|---------|
+| Create spec | `/speckit.specify [description]` |
+| Create task list | `./scripts/ralph-loop.sh plan` |
+| Start building | `./scripts/ralph-loop.sh` |
+| Max 20 iterations | `./scripts/ralph-loop.sh 20` |
+| Use Codex instead | `./scripts/ralph-loop-codex.sh` |
 
-This bypasses permission prompts for fully autonomous operation. Use in a sandboxed environment for safety.
+---
+
+Ready to create your first specification?

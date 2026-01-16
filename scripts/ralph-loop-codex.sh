@@ -5,7 +5,14 @@
 # Based on Geoffrey Huntley's Ralph Wiggum methodology:
 # https://github.com/ghuntley/how-to-ralph-wiggum
 #
-# Uses --dangerously-bypass-approvals-and-sandbox for YOLO mode.
+# Combined with SpecKit-style specifications.
+#
+# Key principles:
+# - Each iteration picks ONE task from IMPLEMENTATION_PLAN.md
+# - Agent works until acceptance criteria are met
+# - Only outputs <promise>DONE</promise> when truly complete
+# - Bash loop checks for magic phrase before continuing
+# - Fresh context window each iteration
 #
 # Usage:
 #   ./scripts/ralph-loop-codex.sh              # Build mode (unlimited)
@@ -19,12 +26,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_DIR/logs"
+CONSTITUTION="$PROJECT_DIR/.specify/memory/constitution.md"
 
 # Configuration
 MAX_ITERATIONS=0  # 0 = unlimited
 MODE="build"
 CODEX_CMD="codex"
-CODEX_YOLO_FLAG="--dangerously-bypass-approvals-and-sandbox"
+YOLO_FLAG="--dangerously-bypass-approvals-and-sandbox"
 
 # Colors
 RED='\033[0;31m'
@@ -32,35 +40,46 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 mkdir -p "$LOG_DIR"
+
+# Check constitution for YOLO setting
+YOLO_ENABLED=true
+if [[ -f "$CONSTITUTION" ]]; then
+    if grep -q "YOLO Mode.*DISABLED" "$CONSTITUTION" 2>/dev/null; then
+        YOLO_ENABLED=false
+    fi
+fi
 
 show_help() {
     cat <<EOF
 Ralph Loop for OpenAI Codex CLI
 
-Based on Geoffrey Huntley's Ralph Wiggum methodology.
+Based on Geoffrey Huntley's Ralph Wiggum methodology + SpecKit specs.
 https://github.com/ghuntley/how-to-ralph-wiggum
 
 Usage:
-  ./scripts/ralph-loop-codex.sh              # Build mode, unlimited iterations
+  ./scripts/ralph-loop-codex.sh              # Build mode, unlimited
   ./scripts/ralph-loop-codex.sh 20           # Build mode, max 20 iterations
-  ./scripts/ralph-loop-codex.sh plan         # Planning mode, unlimited
-  ./scripts/ralph-loop-codex.sh plan 5       # Planning mode, max 5 iterations
+  ./scripts/ralph-loop-codex.sh plan         # Planning mode
+  ./scripts/ralph-loop-codex.sh plan 5       # Planning mode (max 5)
 
 Modes:
-  build (default)  Implements tasks from IMPLEMENTATION_PLAN.md
-  plan             Creates/updates IMPLEMENTATION_PLAN.md from specs
+  build (default)  Pick tasks from IMPLEMENTATION_PLAN.md and implement
+  plan             Create/update IMPLEMENTATION_PLAN.md from specs
 
-YOLO Mode: Uses $CODEX_YOLO_FLAG
+YOLO Mode: Uses $YOLO_FLAG
 
 How it works:
-  1. Each iteration feeds PROMPT.md to Codex
-  2. Codex picks the most important task from the plan
-  3. Codex implements, tests, commits
-  4. Loop restarts with fresh context
-  5. Continues until max iterations or manual stop (Ctrl+C)
+  1. Each iteration passes PROMPT.md content to Codex
+  2. Codex picks the HIGHEST PRIORITY incomplete task
+  3. Codex implements, tests, and verifies acceptance criteria
+  4. Codex outputs <promise>DONE</promise> ONLY if criteria are met
+  5. Bash loop checks for the magic phrase
+  6. If found, loop continues to next iteration (fresh context)
+  7. If not found, loop retries
 
 Prerequisites:
   - OpenAI Codex CLI: npm install -g @openai/codex
@@ -105,9 +124,14 @@ fi
 # Check prompt file exists
 if [ ! -f "$PROMPT_FILE" ]; then
     echo -e "${RED}Error: $PROMPT_FILE not found${NC}"
-    echo ""
-    echo "Create prompt files first. See templates/ for examples."
+    echo "Run ./scripts/ralph-loop.sh first to create default prompts."
     exit 1
+fi
+
+# Build Codex flags
+CODEX_FLAGS=""
+if [ "$YOLO_ENABLED" = true ]; then
+    CODEX_FLAGS="$YOLO_FLAG"
 fi
 
 # Get current branch
@@ -115,19 +139,24 @@ CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}              RALPH LOOP (CODEX) STARTING                    ${NC}"
+echo -e "${GREEN}              RALPH LOOP (Codex) STARTING                    ${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo -e "${BLUE}Mode:${NC}    $MODE"
-echo -e "${BLUE}Prompt:${NC}  $PROMPT_FILE"
-echo -e "${BLUE}Branch:${NC}  $CURRENT_BRANCH"
-echo -e "${YELLOW}YOLO:${NC}    ENABLED ($CODEX_YOLO_FLAG)"
-[ $MAX_ITERATIONS -gt 0 ] && echo -e "${BLUE}Max:${NC}     $MAX_ITERATIONS iterations"
+echo -e "${BLUE}Mode:${NC}     $MODE"
+echo -e "${BLUE}Prompt:${NC}   $PROMPT_FILE"
+echo -e "${BLUE}Branch:${NC}   $CURRENT_BRANCH"
+echo -e "${YELLOW}YOLO:${NC}     $([ "$YOLO_ENABLED" = true ] && echo "ENABLED" || echo "DISABLED")"
+[ $MAX_ITERATIONS -gt 0 ] && echo -e "${BLUE}Max:${NC}      $MAX_ITERATIONS iterations"
+echo ""
+echo -e "${CYAN}The loop checks for <promise>DONE</promise> in each iteration.${NC}"
+echo -e "${CYAN}Agent must verify acceptance criteria before outputting it.${NC}"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop the loop${NC}"
 echo ""
 
 ITERATION=0
+CONSECUTIVE_FAILURES=0
+MAX_CONSECUTIVE_FAILURES=3
 
 while true; do
     # Check max iterations
@@ -147,37 +176,63 @@ while true; do
     # Log file for this iteration
     LOG_FILE="$LOG_DIR/ralph_codex_${MODE}_$(date '+%Y%m%d_%H%M%S').log"
 
-    # Read prompt and run Codex
+    # Read prompt content
     PROMPT_CONTENT=$(cat "$PROMPT_FILE")
     
-    if "$CODEX_CMD" $CODEX_YOLO_FLAG "$PROMPT_CONTENT" 2>&1 | tee "$LOG_FILE"; then
+    # Run Codex, capture output
+    CODEX_OUTPUT=""
+    if CODEX_OUTPUT=$("$CODEX_CMD" $CODEX_FLAGS "$PROMPT_CONTENT" 2>&1 | tee "$LOG_FILE"); then
         echo ""
-        echo -e "${GREEN}✓ Iteration $ITERATION completed${NC}"
+        echo -e "${GREEN}✓ Codex execution completed${NC}"
         
         # Check if DONE promise was output
-        if grep -q "<promise>DONE</promise>" "$LOG_FILE" 2>/dev/null; then
-            echo -e "${GREEN}✓ Completion signal detected${NC}"
+        if echo "$CODEX_OUTPUT" | grep -q "<promise>DONE</promise>"; then
+            echo -e "${GREEN}✓ Completion signal detected: <promise>DONE</promise>${NC}"
+            echo -e "${GREEN}✓ Task completed successfully!${NC}"
+            CONSECUTIVE_FAILURES=0
+            
+            if [ "$MODE" = "plan" ]; then
+                echo ""
+                echo -e "${GREEN}Planning complete! Run './scripts/ralph-loop-codex.sh' to start building.${NC}"
+            fi
         else
-            echo -e "${YELLOW}No completion signal - will retry...${NC}"
+            echo -e "${YELLOW}⚠ No completion signal found${NC}"
+            echo -e "${YELLOW}  Agent did not output <promise>DONE</promise>${NC}"
+            echo -e "${YELLOW}  This means acceptance criteria were not met.${NC}"
+            echo -e "${YELLOW}  Retrying in next iteration...${NC}"
+            CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
+            
+            if [ $CONSECUTIVE_FAILURES -ge $MAX_CONSECUTIVE_FAILURES ]; then
+                echo ""
+                echo -e "${RED}⚠ $MAX_CONSECUTIVE_FAILURES consecutive iterations without completion.${NC}"
+                echo -e "${RED}  The agent may be stuck. Consider:${NC}"
+                echo -e "${RED}  - Checking the logs in $LOG_DIR${NC}"
+                echo -e "${RED}  - Simplifying the current task${NC}"
+                echo -e "${RED}  - Running plan mode to reassess${NC}"
+                CONSECUTIVE_FAILURES=0
+            fi
         fi
     else
-        echo -e "${RED}✗ Iteration $ITERATION failed${NC}"
+        echo -e "${RED}✗ Codex execution failed${NC}"
         echo -e "${YELLOW}Check log: $LOG_FILE${NC}"
+        CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
     fi
 
-    # Push changes after each iteration
+    # Push changes after each iteration (if any)
     git push origin "$CURRENT_BRANCH" 2>/dev/null || {
-        echo -e "${YELLOW}Push failed, creating remote branch...${NC}"
-        git push -u origin "$CURRENT_BRANCH" 2>/dev/null || true
+        if git log origin/$CURRENT_BRANCH..HEAD --oneline 2>/dev/null | grep -q .; then
+            echo -e "${YELLOW}Push failed, creating remote branch...${NC}"
+            git push -u origin "$CURRENT_BRANCH" 2>/dev/null || true
+        fi
     }
 
     # Brief pause between iterations
     echo ""
-    echo -e "${BLUE}Waiting 3s before next iteration...${NC}"
-    sleep 3
+    echo -e "${BLUE}Waiting 2s before next iteration...${NC}"
+    sleep 2
 done
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}      RALPH LOOP (CODEX) FINISHED ($ITERATION iterations)    ${NC}"
+echo -e "${GREEN}       RALPH LOOP (Codex) FINISHED ($ITERATION iterations)   ${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

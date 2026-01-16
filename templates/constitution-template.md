@@ -7,84 +7,49 @@
 
 ---
 
-## 🔍 Context Detection
+## Context Detection for AI Agents
 
-**AI Agent: Read this section first to understand your context.**
+This constitution is read by AI agents in two different contexts:
 
-You are reading this constitution in one of two contexts:
-
-### Context A: Ralph Loop (Implementation Mode)
-
-You are in a Ralph loop if:
-- You were started by `ralph-loop.sh` or `ralph-loop-codex.sh`
-- Your prompt mentions "implement spec" or "work through all specs/issues"
-- You see `<promise>` completion signals in your instructions
-
-**In this context**:
-- Focus on implementation
-- Follow the spec or issue requirements exactly
-- Complete ALL acceptance criteria
-- Test thoroughly before marking done
-- Output `<promise>DONE</promise>` when the item is complete
-- Move to the next item or output `<promise>ALL_DONE</promise>` when finished
-
-### Context B: Interactive Chat (Discussion Mode)
-
-You are in interactive chat if:
-- The user is asking questions, discussing ideas, or seeking guidance
-- You're helping set up the project or create specifications
-- You're being consulted about architecture, design, or approach
-- No Ralph loop was started
-
-**In this context**:
-- Be helpful and conversational
+### 1. Interactive Mode
+When the user is chatting with you outside of a Ralph loop:
+- Be conversational and helpful
+- Ask clarifying questions when needed
 - Guide the user through decisions
-- Create specs using `/speckit.specify [description]`
-- Explain how to start the Ralph loop when ready
-- When user says "Ralph, start working", provide the terminal commands
+- Help create specifications via `/speckit.specify`
+- Discuss project ideas and architecture
+
+### 2. Ralph Loop Mode  
+When you're running inside a Ralph bash loop (fed via stdin):
+- Be fully autonomous — don't ask for permission
+- Read IMPLEMENTATION_PLAN.md and pick the highest priority incomplete task
+- Implement the task completely
+- Run tests and verify acceptance criteria
+- Commit and push (if Git Autonomy enabled)
+- Output `<promise>DONE</promise>` ONLY when the task is 100% complete
+- If criteria not met, fix issues and try again
+
+**How to detect:** If the prompt instructs you to read IMPLEMENTATION_PLAN.md and pick a task, you're in Ralph Loop Mode.
 
 ---
 
 ## Core Principles
 
-### I. Simplicity (YAGNI)
+### I. [PRINCIPLE_1_NAME]
+[Describe your first core principle]
+
+### II. [PRINCIPLE_2_NAME]
+[Describe your second core principle]
+
+### III. Simplicity & YAGNI
 Build exactly what's needed, nothing more. No premature abstractions. No "just in case" features.
 
-### II. Quality First
-Test everything. Verify visually. Only mark done when truly complete.
-
-### III. Spec-Driven Development
-Every feature starts as a specification with clear acceptance criteria.
-
-### IV. Iteration
-If something fails, fix it and retry. Keep iterating until all criteria pass.
-
----
-
-## Autonomy Configuration
-
-### YOLO Mode: [ENABLED/DISABLED]
-
-[If ENABLED]:
-You have FULL permission to:
-- Read and write any files
-- Execute any commands
-- Make HTTP requests
-- Modify the codebase without asking
-
-[If DISABLED]:
-Ask before making significant changes. Explain what you want to do and wait for approval.
-
-### Git Autonomy: [ENABLED/DISABLED]
-
-[If ENABLED]:
-- Commit changes without asking
-- Push to the repository without asking
-- Use meaningful commit messages
-- Commit after completing each work item
-
-[If DISABLED]:
-Ask before committing or pushing. Show the user what will be committed.
+### IV. Autonomous Agent Development
+AI coding agents work autonomously:
+- Make decisions without asking for approval on details
+- Commit and push changes (if Git Autonomy enabled)
+- Test thoroughly before marking done
+- Only ask when genuinely stuck
 
 ---
 
@@ -92,116 +57,117 @@ Ask before committing or pushing. Show the user what will be committed.
 
 | Layer | Technology | Notes |
 |-------|------------|-------|
-| Framework | [FRAMEWORK] | |
-| Language | [LANGUAGE] | |
-| Styling | [STYLING] | |
-| Testing | [TESTING] | |
-| Deployment | [DEPLOYMENT] | |
-
-[If design system exists]:
-### Design System
-**Read and follow**: `[DESIGN_SYSTEM_PATH]`
+| Framework | [YOUR_FRAMEWORK] | e.g., Next.js, FastAPI |
+| Language | [YOUR_LANGUAGE] | e.g., TypeScript, Python |
+| Testing | [YOUR_TESTING] | e.g., Vitest, pytest |
 
 ---
 
-## Work Item Source: [SPECKIT/GITHUB_ISSUES/CUSTOM]
+## Project Structure
 
-[If SPECKIT]:
-### Using SpecKit Specifications
-
-- Specifications live in: `specs/NNN-feature-name/spec.md`
-- Create new specs with: `/speckit.specify [feature description]`
-- Each spec has a Completion Signal section with acceptance criteria
-- The Ralph loop processes specs in numerical order
-
-[If GITHUB_ISSUES]:
-### Using GitHub Issues
-
-- Work items are GitHub Issues in this repository
-- Each issue should have clear acceptance criteria in the body
-- Use labels to prioritize
-- The Ralph loop can process issues: `./scripts/ralph-loop.sh --issue 42`
-- Close issues when complete: `gh issue close 42`
-
-[If CUSTOM]:
-### Using [CUSTOM_SYSTEM_NAME]
-
-[Description of how to access and track work items]
-
----
-
-## Ralph Loop Scripts
-
-Both scripts are in the `scripts/` folder:
-
-### For Claude Code
-```bash
-./scripts/ralph-loop.sh --all              # Process all items
-./scripts/ralph-loop.sh --spec 001-name    # Single spec
-./scripts/ralph-loop.sh --issue 42         # Single issue
-./scripts/ralph-loop.sh "Custom task"      # Free-form prompt
+```
+[SOURCE_LOCATION]/
+├── [describe your structure]
 ```
 
-### For OpenAI Codex CLI
+---
+
+## Ralph Wiggum Configuration
+
+### Autonomy Settings
+- **YOLO Mode**: [ENABLED/DISABLED]
+  - Claude: `--dangerously-skip-permissions`
+  - Codex: `--dangerously-bypass-approvals-and-sandbox`
+- **Git Autonomy**: [ENABLED/DISABLED]
+
+### Work Item Source
+- **Source**: [SpecKit Specs / GitHub Issues / Custom]
+- **Location**: 
+  - SpecKit: `specs/` folder with markdown files
+  - GitHub: [REPO_URL]
+  - Custom: [CUSTOM_LOCATION]
+
+### Ralph Loop Scripts
+Located in `scripts/`:
+- `ralph-loop.sh` — Claude Code loop
+- `ralph-loop-codex.sh` — OpenAI Codex loop
+
+**Usage:**
 ```bash
-./scripts/ralph-loop-codex.sh --all        # Process all items
-./scripts/ralph-loop-codex.sh --spec 001   # Single spec
-./scripts/ralph-loop-codex.sh --issue 42   # Single issue
-./scripts/ralph-loop-codex.sh "Custom"     # Free-form prompt
+# Planning: Create task list from specs
+./scripts/ralph-loop.sh plan
+
+# Building: Implement tasks one by one
+./scripts/ralph-loop.sh        # Unlimited
+./scripts/ralph-loop.sh 20     # Max 20 iterations
 ```
 
-The scripts automatically read YOLO Mode from this constitution and configure accordingly.
+---
+
+## Development Workflow
+
+### Phase 1: Create Specifications
+
+Use the SpecKit approach:
+1. Run `/speckit.specify [feature description]`
+2. Agent creates spec in `specs/NNN-feature-name/spec.md`
+3. Each spec includes a **Completion Signal** section with:
+   - Implementation checklist
+   - Testing requirements
+   - Acceptance criteria
+   - Magic phrase: `<promise>DONE</promise>`
+
+### Phase 2: Run Planning Mode
+
+```bash
+./scripts/ralph-loop.sh plan
+```
+
+This analyzes specs vs current code and creates IMPLEMENTATION_PLAN.md.
+
+### Phase 3: Run Build Mode
+
+```bash
+./scripts/ralph-loop.sh
+```
+
+Each iteration:
+1. Reads IMPLEMENTATION_PLAN.md
+2. Picks the highest priority incomplete task
+3. Implements completely
+4. Runs tests
+5. Verifies acceptance criteria
+6. Commits and pushes
+7. Outputs `<promise>DONE</promise>` if successful
+8. Exits for fresh context
+9. Loop restarts
+
+### Completion Signal Rules
+
+- Output `<promise>DONE</promise>` ONLY when task acceptance criteria are 100% met
+- The bash loop checks for this exact string
+- If not found, the loop continues with another iteration
+- This ensures tasks are truly complete before moving on
 
 ---
 
-## Completion Signals
+## Validation Commands
 
-Every work item must have acceptance criteria.
+Run these after implementing:
 
-### Single Item Completion
-When implementing a spec or resolving an issue:
-1. Complete ALL acceptance criteria
-2. Run all tests
-3. Verify visually if applicable
-4. Commit and push
-5. Output: `<promise>DONE</promise>`
-
-### All Items Completion
-When the outer loop finishes all items:
-- Output: `<promise>ALL_DONE</promise>`
-
----
-
-## Deployment
-
-[DEPLOYMENT_INSTRUCTIONS]
-
----
-
-## The Magic Word
-
-When the user says **"Ralph, start working"**, respond with:
-
-> Ready to start the Ralph loop! Run this in your terminal:
-> 
-> **For Claude Code:**
-> ```bash
-> ./scripts/ralph-loop.sh --all
-> ```
-> 
-> **For Codex CLI:**
-> ```bash
-> ./scripts/ralph-loop-codex.sh --all
-> ```
+```bash
+[YOUR_TEST_COMMANDS]
+```
 
 ---
 
 ## Governance
 
-- **Amendments**: Update this file, increment version, document changes
+- **Amendments**: Update this file, increment version, note changes
 - **Compliance**: Follow principles in spirit, not just letter
-- **Exceptions**: Document and justify in specs when deviating
+- **Exceptions**: Document and justify when deviating
 
 ---
 
-**Version**: 1.0.0 | **Created**: [DATE] | **Last Updated**: [DATE]
+**Created**: [DATE]
+**Version**: 1.0.0
