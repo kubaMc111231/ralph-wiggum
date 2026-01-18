@@ -250,7 +250,9 @@ Past loop outputs are preserved on disk:
 
 Use these as an external memory store (search/slice as needed).
 If you need a recursive sub-query, write a focused prompt in `rlm/queries/`,
-run a short sub-call, and store the result in `rlm/answers/`.
+run:
+  `./scripts/rlm-subcall.sh --query rlm/queries/<file>.md`
+and store the result in `rlm/answers/`.
 EOF
 fi
 
@@ -356,6 +358,8 @@ Past loop outputs are preserved on disk:
 - Iteration index: `rlm/index.tsv`
 
 Use these as an external memory store (search/slice as needed).
+For recursive sub-queries, use:
+  `./scripts/rlm-subcall.sh --query rlm/queries/<file>.md`
 EOF
 fi
 

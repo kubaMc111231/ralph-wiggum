@@ -167,6 +167,12 @@ RLM workspace (when enabled):
 - `rlm/index.tsv` — Index of all iterations
 - `logs/` — Full CLI output per iteration
 
+Optional recursive subcalls:
+
+```bash
+./scripts/rlm-subcall.sh --query rlm/queries/q1.md
+```
+
 This mirrors the Recursive Language Model (RLM) idea: handle huge prompts by inspecting only the slices you need.
 
 ## Two Modes
