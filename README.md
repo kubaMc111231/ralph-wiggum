@@ -167,6 +167,28 @@ Each iteration:
 5. Bash loop checks for the phrase
 6. Context cleared, next iteration starts
 
+### Logging (All Output Captured)
+
+Every loop run writes **all output** to log files in `logs/`:
+
+- **Session log:** `logs/ralph_*_session_YYYYMMDD_HHMMSS.log` (entire run, including CLI output)
+- **Iteration logs:** `logs/ralph_*_iter_N_YYYYMMDD_HHMMSS.log` (per-iteration CLI output)
+- **Codex last message:** `logs/ralph_codex_output_iter_N_*.txt`
+
+If something gets stuck, these logs contain the full verbose trace.
+
+### RLM Mode (Experimental)
+
+For huge inputs, you can run in **RLM-style mode** by providing a large context file.
+The agent will treat the file as external environment and only load slices on demand.
+
+```bash
+./scripts/ralph-loop.sh --rlm-context ./rlm/context.txt
+./scripts/ralph-loop-codex.sh --rlm-context ./rlm/context.txt
+```
+
+This mirrors the idea from Recursive Language Models (RLMs), which treat long prompts as external environment rather than stuffing them into the context window.
+
 ### Using Codex Instead
 
 ```bash

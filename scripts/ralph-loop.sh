@@ -25,6 +25,7 @@
 #
 
 set -e
+set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -36,6 +37,7 @@ MAX_ITERATIONS=0  # 0 = unlimited
 MODE="build"
 CLAUDE_CMD="claude"
 YOLO_FLAG="--dangerously-skip-permissions"
+RLM_CONTEXT_FILE=""
 
 # Colors
 RED='\033[0;31m'
@@ -67,6 +69,8 @@ Usage:
   ./scripts/ralph-loop.sh              # Build mode, unlimited iterations
   ./scripts/ralph-loop.sh 20           # Build mode, max 20 iterations  
   ./scripts/ralph-loop.sh plan         # Planning mode (optional)
+  ./scripts/ralph-loop.sh --rlm-context ./rlm/context.txt
+  ./scripts/ralph-loop.sh --rlm ./rlm/context.txt
 
 Modes:
   build (default)  Pick spec/task and implement
@@ -77,6 +81,11 @@ Work Sources (checked in order):
   2. specs/ folder - Otherwise, pick highest priority incomplete spec
 
 The plan mode is OPTIONAL. Most projects can work directly from specs.
+
+RLM Mode (optional):
+  --rlm-context <file>  Treat a large context file as external environment.
+                        The agent should read slices instead of loading it all.
+  --rlm [file]          Shortcut for --rlm-context (defaults to rlm/context.txt)
 
 How it works:
   1. Each iteration feeds PROMPT.md to Claude via stdin
@@ -91,18 +100,61 @@ EOF
 }
 
 # Parse arguments
-if [ "$1" = "plan" ]; then
-    MODE="plan"
-    MAX_ITERATIONS=${2:-1}  # Default to 1 iteration for planning
-elif [[ "$1" =~ ^[0-9]+$ ]]; then
-    MODE="build"
-    MAX_ITERATIONS=$1
-elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    show_help
-    exit 0
-fi
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        plan)
+            MODE="plan"
+            if [[ "${2:-}" =~ ^[0-9]+$ ]]; then
+                MAX_ITERATIONS="$2"
+                shift 2
+            else
+                MAX_ITERATIONS=1
+                shift
+            fi
+            ;;
+        --rlm-context)
+            RLM_CONTEXT_FILE="${2:-}"
+            shift 2
+            ;;
+        --rlm)
+            if [[ -n "${2:-}" && "${2:0:1}" != "-" ]]; then
+                RLM_CONTEXT_FILE="$2"
+                shift 2
+            else
+                RLM_CONTEXT_FILE="rlm/context.txt"
+                shift
+            fi
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        [0-9]*)
+            MODE="build"
+            MAX_ITERATIONS="$1"
+            shift
+            ;;
+        *)
+            echo -e "${RED}Unknown argument: $1${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
 cd "$PROJECT_DIR"
+
+# Validate RLM context file (if provided)
+if [ -n "$RLM_CONTEXT_FILE" ] && [ ! -f "$RLM_CONTEXT_FILE" ]; then
+    echo -e "${RED}Error: RLM context file not found: $RLM_CONTEXT_FILE${NC}"
+    echo "Create it first (example):"
+    echo "  mkdir -p rlm && printf \"%s\" \"<your long context>\" > $RLM_CONTEXT_FILE"
+    exit 1
+fi
+
+# Session log (captures ALL output)
+SESSION_LOG="$LOG_DIR/ralph_${MODE}_session_$(date '+%Y%m%d_%H%M%S').log"
+exec > >(tee -a "$SESSION_LOG") 2>&1
 
 # Check if Claude CLI is available
 if ! command -v "$CLAUDE_CMD" &> /dev/null; then
@@ -137,6 +189,43 @@ Based on Geoffrey Huntley's Ralph Wiggum methodology.
 0c. Check if `IMPLEMENTATION_PLAN.md` exists.
 
 ---
+BUILDEOF
+
+# Optional RLM context block
+if [ -n "$RLM_CONTEXT_FILE" ]; then
+cat >> "PROMPT_build.md" << EOF
+
+## Phase 0d: RLM Context (Optional)
+
+You have access to a large context file at:
+**$RLM_CONTEXT_FILE**
+
+Treat this file as an external environment. Do NOT paste the whole file into the prompt.
+Instead, inspect it programmatically and recursively:
+
+- Use small slices:
+  ```bash
+  sed -n 'START,ENDp' "$RLM_CONTEXT_FILE"
+  ```
+- Or Python snippets:
+  ```bash
+  python - <<'PY'
+  from pathlib import Path
+  p = Path("$RLM_CONTEXT_FILE")
+  print(p.read_text().splitlines()[START:END])
+  PY
+  ```
+- Use search:
+  ```bash
+  rg -n "pattern" "$RLM_CONTEXT_FILE"
+  ```
+
+Goal: decompose the task into smaller sub-queries and only load the pieces you need.
+This mirrors the Recursive Language Model approach from https://arxiv.org/html/2512.24601v1
+EOF
+fi
+
+cat >> "PROMPT_build.md" << 'BUILDEOF'
 
 ## Phase 1: Select Work Item
 
@@ -215,6 +304,24 @@ Only use this when you want a detailed breakdown of specs into smaller tasks.
 0b. Study `specs/` to learn all feature specifications.
 
 ---
+PLANEOF
+
+# Optional RLM context block for planning
+if [ -n "$RLM_CONTEXT_FILE" ]; then
+cat >> "PROMPT_plan.md" << EOF
+
+## Phase 0c: RLM Context (Optional)
+
+You have access to a large context file at:
+**$RLM_CONTEXT_FILE**
+
+Treat this file as an external environment. Do NOT paste the whole file into the prompt.
+Inspect only the slices you need using shell tools or Python.
+This mirrors the Recursive Language Model approach from https://arxiv.org/html/2512.24601v1
+EOF
+fi
+
+cat >> "PROMPT_plan.md" << 'PLANEOF'
 
 ## Phase 1: Gap Analysis
 
@@ -296,6 +403,8 @@ echo -e "${BLUE}Mode:${NC}     $MODE"
 echo -e "${BLUE}Prompt:${NC}   $PROMPT_FILE"
 echo -e "${BLUE}Branch:${NC}   $CURRENT_BRANCH"
 echo -e "${YELLOW}YOLO:${NC}     $([ "$YOLO_ENABLED" = true ] && echo "ENABLED" || echo "DISABLED")"
+[ -n "$RLM_CONTEXT_FILE" ] && echo -e "${BLUE}RLM:${NC}      $RLM_CONTEXT_FILE"
+[ -n "$SESSION_LOG" ] && echo -e "${BLUE}Log:${NC}      $SESSION_LOG"
 [ $MAX_ITERATIONS -gt 0 ] && echo -e "${BLUE}Max:${NC}      $MAX_ITERATIONS iterations"
 echo ""
 echo -e "${BLUE}Work source:${NC}"
@@ -336,7 +445,7 @@ while true; do
     echo ""
 
     # Log file for this iteration
-    LOG_FILE="$LOG_DIR/ralph_${MODE}_$(date '+%Y%m%d_%H%M%S').log"
+    LOG_FILE="$LOG_DIR/ralph_${MODE}_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').log"
 
     # Run Claude with prompt via stdin, capture output
     CLAUDE_OUTPUT=""

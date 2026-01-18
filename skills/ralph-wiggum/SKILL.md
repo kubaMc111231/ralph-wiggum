@@ -144,6 +144,25 @@ The more specific your acceptance criteria, the better Ralph performs.
 ./scripts/ralph-loop-codex.sh
 ```
 
+### Logging (All Output Captured)
+
+Every loop run writes **all output** to log files in `logs/`:
+
+- **Session log:** `logs/ralph_*_session_YYYYMMDD_HHMMSS.log` (entire run, including CLI output)
+- **Iteration logs:** `logs/ralph_*_iter_N_YYYYMMDD_HHMMSS.log` (per-iteration CLI output)
+- **Codex last message:** `logs/ralph_codex_output_iter_N_*.txt`
+
+### RLM Mode (Experimental)
+
+Provide a large context file and the agent will treat it as external environment:
+
+```bash
+./scripts/ralph-loop.sh --rlm-context ./rlm/context.txt
+./scripts/ralph-loop-codex.sh --rlm-context ./rlm/context.txt
+```
+
+This mirrors the Recursive Language Model (RLM) idea: handle huge prompts by inspecting only the slices you need.
+
 ## Two Modes
 
 | Mode | Purpose | Command |

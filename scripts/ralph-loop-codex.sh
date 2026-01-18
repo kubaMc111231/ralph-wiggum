@@ -12,6 +12,7 @@
 #
 
 set -e
+set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -21,6 +22,7 @@ CONSTITUTION="$PROJECT_DIR/.specify/memory/constitution.md"
 # Configuration
 MAX_ITERATIONS=0  # 0 = unlimited
 MODE="build"
+RLM_CONTEXT_FILE=""
 
 # Colors
 RED='\033[0;31m'
@@ -49,6 +51,8 @@ Usage:
   ./scripts/ralph-loop-codex.sh              # Build mode, unlimited
   ./scripts/ralph-loop-codex.sh 20           # Build mode, max 20 iterations
   ./scripts/ralph-loop-codex.sh plan         # Planning mode (OPTIONAL)
+  ./scripts/ralph-loop-codex.sh --rlm-context ./rlm/context.txt
+  ./scripts/ralph-loop-codex.sh --rlm ./rlm/context.txt
 
 Modes:
   build (default)  Pick incomplete spec and implement
@@ -59,22 +63,70 @@ Work Source:
 
 YOLO Mode: Uses --dangerously-bypass-approvals-and-sandbox
 
+RLM Mode (optional):
+  --rlm-context <file>  Treat a large context file as external environment.
+                        The agent should read slices instead of loading it all.
+  --rlm [file]          Shortcut for --rlm-context (defaults to rlm/context.txt)
+
 EOF
 }
 
 # Parse arguments
-if [ "$1" = "plan" ]; then
-    MODE="plan"
-    MAX_ITERATIONS=${2:-1}
-elif [[ "$1" =~ ^[0-9]+$ ]]; then
-    MODE="build"
-    MAX_ITERATIONS=$1
-elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    show_help
-    exit 0
-fi
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        plan)
+            MODE="plan"
+            if [[ "${2:-}" =~ ^[0-9]+$ ]]; then
+                MAX_ITERATIONS="$2"
+                shift 2
+            else
+                MAX_ITERATIONS=1
+                shift
+            fi
+            ;;
+        --rlm-context)
+            RLM_CONTEXT_FILE="${2:-}"
+            shift 2
+            ;;
+        --rlm)
+            if [[ -n "${2:-}" && "${2:0:1}" != "-" ]]; then
+                RLM_CONTEXT_FILE="$2"
+                shift 2
+            else
+                RLM_CONTEXT_FILE="rlm/context.txt"
+                shift
+            fi
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        [0-9]*)
+            MODE="build"
+            MAX_ITERATIONS="$1"
+            shift
+            ;;
+        *)
+            echo -e "${RED}Unknown argument: $1${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
 cd "$PROJECT_DIR"
+
+# Validate RLM context file (if provided)
+if [ -n "$RLM_CONTEXT_FILE" ] && [ ! -f "$RLM_CONTEXT_FILE" ]; then
+    echo -e "${RED}Error: RLM context file not found: $RLM_CONTEXT_FILE${NC}"
+    echo "Create it first (example):"
+    echo "  mkdir -p rlm && printf \"%s\" \"<your long context>\" > $RLM_CONTEXT_FILE"
+    exit 1
+fi
+
+# Session log (captures ALL output)
+SESSION_LOG="$LOG_DIR/ralph_codex_${MODE}_session_$(date '+%Y%m%d_%H%M%S').log"
+exec > >(tee -a "$SESSION_LOG") 2>&1
 
 # Check if Codex CLI is available
 if ! command -v codex &> /dev/null; then
@@ -128,6 +180,8 @@ echo -e "${BLUE}Mode:${NC}     $MODE"
 echo -e "${BLUE}Prompt:${NC}   $PROMPT_FILE"
 echo -e "${BLUE}Branch:${NC}   $CURRENT_BRANCH"
 echo -e "${YELLOW}YOLO:${NC}     $([ "$YOLO_ENABLED" = true ] && echo "ENABLED" || echo "DISABLED")"
+[ -n "$RLM_CONTEXT_FILE" ] && echo -e "${BLUE}RLM:${NC}      $RLM_CONTEXT_FILE"
+[ -n "$SESSION_LOG" ] && echo -e "${BLUE}Log:${NC}      $SESSION_LOG"
 [ $MAX_ITERATIONS -gt 0 ] && echo -e "${BLUE}Max:${NC}      $MAX_ITERATIONS iterations"
 echo ""
 echo -e "${BLUE}Work source:${NC}"
@@ -163,16 +217,54 @@ while true; do
     echo ""
 
     # Log file for this iteration
-    LOG_FILE="$LOG_DIR/ralph_codex_${MODE}_$(date '+%Y%m%d_%H%M%S').log"
-    OUTPUT_FILE="$LOG_DIR/ralph_codex_output_$(date '+%Y%m%d_%H%M%S').txt"
+    LOG_FILE="$LOG_DIR/ralph_codex_${MODE}_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').log"
+    OUTPUT_FILE="$LOG_DIR/ralph_codex_output_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').txt"
+
+    # Optional RLM context block appended to prompt at runtime
+    EFFECTIVE_PROMPT_FILE="$PROMPT_FILE"
+    if [ -n "$RLM_CONTEXT_FILE" ]; then
+        EFFECTIVE_PROMPT_FILE="$LOG_DIR/ralph_codex_prompt_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').md"
+        cat "$PROMPT_FILE" > "$EFFECTIVE_PROMPT_FILE"
+        cat >> "$EFFECTIVE_PROMPT_FILE" << EOF
+
+---
+## RLM Context (Optional)
+
+You have access to a large context file at:
+**$RLM_CONTEXT_FILE**
+
+Treat this file as an external environment. Do NOT paste the whole file into the prompt.
+Instead, inspect it programmatically and recursively:
+
+- Use small slices:
+  \`\`\`bash
+  sed -n 'START,ENDp' "$RLM_CONTEXT_FILE"
+  \`\`\`
+- Or Python snippets:
+  \`\`\`bash
+  python - <<'PY'
+  from pathlib import Path
+  p = Path("$RLM_CONTEXT_FILE")
+  print(p.read_text().splitlines()[START:END])
+  PY
+  \`\`\`
+- Use search:
+  \`\`\`bash
+  rg -n "pattern" "$RLM_CONTEXT_FILE"
+  \`\`\`
+
+Goal: decompose the task into smaller sub-queries and only load the pieces you need.
+This mirrors the Recursive Language Model approach from https://arxiv.org/html/2512.24601v1
+EOF
+    fi
 
     # Run Codex with exec mode, reading prompt from stdin with "-"
     # Use --output-last-message to capture the final response for checking
-    echo -e "${BLUE}Running: cat $PROMPT_FILE | codex $CODEX_FLAGS - --output-last-message $OUTPUT_FILE${NC}"
+    echo -e "${BLUE}Running: cat $EFFECTIVE_PROMPT_FILE | codex $CODEX_FLAGS - --output-last-message $OUTPUT_FILE${NC}"
     echo ""
     
     CODEX_EXIT=0
-    if cat "$PROMPT_FILE" | codex $CODEX_FLAGS - --output-last-message "$OUTPUT_FILE" 2>&1 | tee "$LOG_FILE"; then
+    if cat "$EFFECTIVE_PROMPT_FILE" | codex $CODEX_FLAGS - --output-last-message "$OUTPUT_FILE" 2>&1 | tee "$LOG_FILE"; then
         echo ""
         echo -e "${GREEN}✓ Codex execution completed${NC}"
         
