@@ -539,9 +539,10 @@ EOF
         echo ""
         echo -e "${GREEN}✓ Codex execution completed${NC}"
         
-        # Check if DONE promise was output (in the last message file)
-        if [ -f "$OUTPUT_FILE" ] && grep -q "<promise>DONE</promise>" "$OUTPUT_FILE"; then
-            echo -e "${GREEN}✓ Completion signal detected: <promise>DONE</promise>${NC}"
+        # Check if DONE promise was output (accept both DONE and ALL_DONE variants)
+        if [ -f "$OUTPUT_FILE" ] && grep -qE "<promise>(ALL_)?DONE</promise>" "$OUTPUT_FILE"; then
+            DETECTED_SIGNAL=$(grep -oE "<promise>(ALL_)?DONE</promise>" "$OUTPUT_FILE" | tail -1)
+            echo -e "${GREEN}✓ Completion signal detected: ${DETECTED_SIGNAL}${NC}"
             echo -e "${GREEN}✓ Task completed successfully!${NC}"
             CONSECUTIVE_FAILURES=0
             RLM_STATUS="done"
@@ -552,14 +553,15 @@ EOF
                 break
             fi
         # Also check the main log
-        elif grep -q "<promise>DONE</promise>" "$LOG_FILE"; then
-            echo -e "${GREEN}✓ Completion signal detected in output${NC}"
+        elif grep -qE "<promise>(ALL_)?DONE</promise>" "$LOG_FILE"; then
+            DETECTED_SIGNAL=$(grep -oE "<promise>(ALL_)?DONE</promise>" "$LOG_FILE" | tail -1)
+            echo -e "${GREEN}✓ Completion signal detected: ${DETECTED_SIGNAL}${NC}"
             echo -e "${GREEN}✓ Task completed successfully!${NC}"
             CONSECUTIVE_FAILURES=0
             RLM_STATUS="done"
         else
             echo -e "${YELLOW}⚠ No completion signal found${NC}"
-            echo -e "${YELLOW}  Agent did not output <promise>DONE</promise>${NC}"
+            echo -e "${YELLOW}  Agent did not output <promise>DONE</promise> or <promise>ALL_DONE</promise>${NC}"
             echo -e "${YELLOW}  Retrying in next iteration...${NC}"
             CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
             RLM_STATUS="incomplete"

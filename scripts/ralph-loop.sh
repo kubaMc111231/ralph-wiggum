@@ -598,9 +598,10 @@ while true; do
         echo ""
         echo -e "${GREEN}✓ Claude execution completed${NC}"
         
-        # Check if DONE promise was output
-        if echo "$CLAUDE_OUTPUT" | grep -q "<promise>DONE</promise>"; then
-            echo -e "${GREEN}✓ Completion signal detected: <promise>DONE</promise>${NC}"
+        # Check if DONE promise was output (accept both DONE and ALL_DONE variants)
+        if echo "$CLAUDE_OUTPUT" | grep -qE "<promise>(ALL_)?DONE</promise>"; then
+            DETECTED_SIGNAL=$(echo "$CLAUDE_OUTPUT" | grep -oE "<promise>(ALL_)?DONE</promise>" | tail -1)
+            echo -e "${GREEN}✓ Completion signal detected: ${DETECTED_SIGNAL}${NC}"
             echo -e "${GREEN}✓ Task completed successfully!${NC}"
             CONSECUTIVE_FAILURES=0
             RLM_STATUS="done"
@@ -615,7 +616,7 @@ while true; do
             fi
         else
             echo -e "${YELLOW}⚠ No completion signal found${NC}"
-            echo -e "${YELLOW}  Agent did not output <promise>DONE</promise>${NC}"
+            echo -e "${YELLOW}  Agent did not output <promise>DONE</promise> or <promise>ALL_DONE</promise>${NC}"
             echo -e "${YELLOW}  This means acceptance criteria were not met.${NC}"
             echo -e "${YELLOW}  Retrying in next iteration...${NC}"
             CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
